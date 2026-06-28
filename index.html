@@ -266,9 +266,25 @@ let sessionEmb=[];                 // 今回の撮影で集めた“多様な角
 let captureName=null, captureFolder=null;
 let predictRAF=null, predictBusy=false, lastT=0, threshold=0.80;
 let stableName=null, stableCount=0, frozen=false;
-let meta={folders:[],classes:{}};  // classes[name]={folder, steps:[dataURL,...]}
+let meta={folders:[],classes:{}};  // classes[name]={folder, steps:[imageId,...]}
 let stepsEditTarget=null;          // 手順編集中の器械名
 let slideName=null, slideIdx=0;
+let imgCache={};                   // imageId -> dataURL（表示用キャッシュ）
+
+/* ====== 端末内データベース（IndexedDB）：手順写真など大きいデータ用 ====== */
+const DB_NAME='kikai_db', DB_VER=1;
+let _db=null, _idbOK=true;
+function openDB(){return new Promise((resolve,reject)=>{
+  let req;try{req=indexedDB.open(DB_NAME,DB_VER);}catch(e){reject(e);return;}
+  req.onupgradeneeded=()=>{const d=req.result;if(!d.objectStoreNames.contains('kv'))d.createObjectStore('kv');if(!d.objectStoreNames.contains('images'))d.createObjectStore('images');};
+  req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);
+});}
+async function db(){if(_db)return _db;_db=await openDB();return _db;}
+function idbPut(store,key,val){return new Promise((res,rej)=>{db().then(d=>{const tx=d.transaction(store,'readwrite');tx.objectStore(store).put(val,key);tx.oncomplete=()=>res(true);tx.onerror=()=>rej(tx.error);tx.onabort=()=>rej(tx.error||new Error('abort'));}).catch(rej);});}
+function idbGet(store,key){return new Promise((res,rej)=>{db().then(d=>{const tx=d.transaction(store,'readonly');const r=tx.objectStore(store).get(key);r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);}).catch(rej);});}
+function idbDel(store,key){return new Promise((res)=>{db().then(d=>{const tx=d.transaction(store,'readwrite');tx.objectStore(store).delete(key);tx.oncomplete=()=>res(true);tx.onerror=()=>res(false);}).catch(()=>res(false));});}
+async function preloadImages(ids){for(const id of ids){if(imgCache[id])continue;try{const v=await idbGet('images',id);if(v)imgCache[id]=v;}catch(e){}}}
+
 
 const $=id=>document.getElementById(id);
 
@@ -297,7 +313,7 @@ async function ensureModel(msgEl,textEl){
       try{featureModel=await window.mobilenet.load({version:2,alpha:1.0});}
       catch(inner){console.warn('v2 fail->v1',inner);featureModel=await window.mobilenet.load({version:1,alpha:1.0});}
     }
-    loadStore();
+    await loadStore();
     return true;
   }catch(e){console.error(e);if(textEl)textEl.innerHTML='AIモデル本体を取得できませんでした。<br>https のURLを、本物の Safari で開いてください。';return false;}
 }
@@ -423,7 +439,13 @@ function renameClass(oldName){
   meta.classes[newName]=meta.classes[oldName]||{folder:null,steps:[]};delete meta.classes[oldName];
   saveStore();renderLibrary();
 }
-function deleteClass(name){if(!confirm('「'+name+'」の学習データと手順を削除しますか？'))return;classifier.clearClass(name);delete meta.classes[name];saveStore();renderLibrary();}
+async function deleteClass(name){
+  if(!confirm('「'+name+'」の学習データと手順を削除しますか？'))return;
+  const steps=(meta.classes[name]&&meta.classes[name].steps)||[];
+  for(const id of steps){await idbDel('images',id);delete imgCache[id];}
+  classifier.clearClass(name);delete meta.classes[name];
+  await saveMeta();renderLibrary();
+}
 function moveClass(name,folderId){const c=meta.classes[name]||{steps:[]};c.folder=folderId||null;meta.classes[name]=c;saveStore();renderLibrary();}
 
 function renderLibrary(){
@@ -431,7 +453,7 @@ function renderLibrary(){
   const counts=classifier?classifier.getClassExampleCount():{};
   const names=Object.keys(counts);
   names.forEach(n=>{if(!meta.classes[n])meta.classes[n]={folder:null,steps:[]};if(!meta.classes[n].steps)meta.classes[n].steps=[];});
-  if(names.length===0){body.innerHTML='<div class="empty">まだ何も覚えていません。<br>「学習」から器械を覚えさせてください。</div>';return;}
+  if(names.length===0&&meta.folders.length===0){body.innerHTML='<div class="empty">まだフォルダも器械もありません。<br>「＋ フォルダ」で作るか、「学習」から覚えさせてください。</div>';return;}
   const folderOpts=f=>'<option value="">未分類</option>'+meta.folders.map(x=>`<option value="${x.id}" ${f===x.id?'selected':''}>${escapeHtml(x.name)}</option>`).join('');
   const rowHtml=n=>{
     const steps=(meta.classes[n].steps||[]).length;
@@ -456,32 +478,50 @@ function renderLibrary(){
 
 /* ---- 手順（写真）編集 ---- */
 let stepsBackTo='lib';
-function openSteps(name,backTo){
+async function openSteps(name,backTo){
   stepsEditTarget=name;stepsBackTo=backTo||'lib';
   if(!meta.classes[name])meta.classes[name]={folder:null,steps:[]};
   if(!meta.classes[name].steps)meta.classes[name].steps=[];
   $('stepsTitle').textContent='分解手順：'+name;
   $('stepsBack').onclick=()=>{ stepsBackTo==='learn'?goLearn():goLibrary(); };
-  stopCamera();showScreen('steps');renderSteps();
+  stopCamera();showScreen('steps');
+  await preloadImages(meta.classes[name].steps);
+  renderSteps();
 }
 function renderSteps(){
   const steps=meta.classes[stepsEditTarget].steps;
   const grid=$('stepGrid');
-  let html=steps.map((src,i)=>`<div class="stepcard"><span class="lbl">Step${i+1}</span><button class="x" onclick="deleteStep(${i})">✕</button><img src="${src}" alt="Step${i+1}"></div>`).join('');
+  let html=steps.map((id,i)=>{
+    const src=imgCache[id]||'';
+    return `<div class="stepcard"><span class="lbl">Step${i+1}</span><button class="x" onclick="deleteStep(${i})">✕</button><img src="${src}" alt="Step${i+1}"></div>`;
+  }).join('');
   html+=`<button class="addstep" onclick="addStep()">＋<br>写真を追加</button>`;
   grid.innerHTML=html;
 }
 function addStep(){ $('stepFile').value='';$('stepFile').click(); }
 function onStepFile(ev){
   const file=ev.target.files&&ev.target.files[0];if(!file)return;
-  compressImage(file,1024,0.72).then(dataUrl=>{
-    meta.classes[stepsEditTarget].steps.push(dataUrl);
-    const ok=saveStore();
-    if(!ok){ meta.classes[stepsEditTarget].steps.pop(); } // 保存失敗時は追加を取り消す
+  compressImage(file,1024,0.72).then(async dataUrl=>{
+    const id='img_'+Date.now()+'_'+Math.random().toString(36).slice(2,7);
+    try{
+      await idbPut('images',id,dataUrl);              // 写真は端末内DBへ
+    }catch(e){
+      console.error(e);
+      alert('写真を保存できませんでした。端末の空き容量を確認してください。');
+      return;
+    }
+    imgCache[id]=dataUrl;
+    meta.classes[stepsEditTarget].steps.push(id);
+    await saveMeta();                                  // 参照（軽い情報）だけ保存
     renderSteps();
   }).catch(()=>alert('画像を読み込めませんでした。'));
 }
-function deleteStep(i){if(!confirm('Step'+(i+1)+'の写真を削除しますか？'))return;meta.classes[stepsEditTarget].steps.splice(i,1);saveStore();renderSteps();}
+async function deleteStep(i){
+  if(!confirm('Step'+(i+1)+'の写真を削除しますか？'))return;
+  const id=meta.classes[stepsEditTarget].steps.splice(i,1)[0];
+  if(id){await idbDel('images',id);delete imgCache[id];}
+  await saveMeta();renderSteps();
+}
 
 /* 画像を縮小してJPEG化（端末内保存を軽くする） */
 function compressImage(file,maxSide,quality){
@@ -502,7 +542,7 @@ function compressImage(file,maxSide,quality){
 }
 
 /* ---- スライド表示 ---- */
-function openSlides(name){
+async function openSlides(name){
   const steps=(meta.classes[name]&&meta.classes[name].steps)||[];
   slideName=name;slideIdx=0;
   $('slideTitle').textContent=name;
@@ -513,13 +553,15 @@ function openSlides(name){
     $('slideNav').style.display='none';
     return;
   }
+  $('slideStage').innerHTML='<div class="empty-steps">読み込み中…</div>';
   $('slideNav').style.display='flex';
+  await preloadImages(steps);
   renderSlide();
 }
 function renderSlide(){
   const steps=meta.classes[slideName].steps;
   $('slideStepNo').textContent='Step '+(slideIdx+1)+' / '+steps.length;
-  $('slideStage').innerHTML='<img src="'+steps[slideIdx]+'" alt="Step'+(slideIdx+1)+'">';
+  $('slideStage').innerHTML='<img src="'+(imgCache[steps[slideIdx]]||'')+'" alt="Step'+(slideIdx+1)+'">';
   $('slidePrev').disabled=slideIdx===0;
   $('slideNext').textContent=slideIdx===steps.length-1?'おわり':'次 ›';
 }
@@ -593,34 +635,52 @@ function restartPredict(){
 }
 function onThresh(v){threshold=v/100;$('threshVal').textContent=v+'%';}
 
-/* ---- 端末内 保存・復元 ---- */
-function saveStore(){
+/* ---- 端末内 保存・復元（IndexedDBへ。容量が大きく写真も入る） ---- */
+async function saveMeta(){
   try{
-    const obj={meta,ds:{}};
-    if(classifier){const d=classifier.getClassifierDataset();Object.keys(d).forEach(k=>{obj.ds[k]={data:Array.from(d[k].dataSync()),shape:d[k].shape};});}
-    localStorage.setItem(STORE_KEY,JSON.stringify(obj));
+    await idbPut('kv','meta',meta);
+    if(classifier){
+      const d=classifier.getClassifierDataset();const ds={};
+      Object.keys(d).forEach(k=>{ds[k]={data:Array.from(d[k].dataSync()),shape:d[k].shape};});
+      await idbPut('kv','dataset',ds);
+    }
     return true;
-  }catch(e){
-    console.warn('保存できませんでした',e);
-    alert('端末内の保存容量がいっぱいの可能性があります。手順写真の枚数を減らすか、不要な器械を削除してください。');
-    return false;
-  }
+  }catch(e){console.warn('保存失敗',e);alert('保存できませんでした。端末の空き容量を確認してください。');return false;}
 }
-function loadStore(){
+function saveStore(){return saveMeta();}   /* 後方互換 */
+
+async function loadStore(){
   try{
-    let raw=localStorage.getItem(STORE_KEY);
-    if(!raw){migrateOld();raw=localStorage.getItem(STORE_KEY);if(!raw)return;}
-    const obj=JSON.parse(raw);
-    if(obj.meta){meta=obj.meta;if(!meta.folders)meta.folders=[];if(!meta.classes)meta.classes={};Object.keys(meta.classes).forEach(n=>{if(!meta.classes[n].steps)meta.classes[n].steps=[];});}
-    if(obj.ds&&classifier){const ds={};Object.keys(obj.ds).forEach(k=>{ds[k]=tf.tensor(obj.ds[k].data,obj.ds[k].shape);});if(Object.keys(ds).length)classifier.setClassifierDataset(ds);}
+    let m=null,ds=null;
+    try{m=await idbGet('kv','meta');ds=await idbGet('kv','dataset');}catch(e){}
+    if(!m){ await migrateOld(); try{m=await idbGet('kv','meta');ds=await idbGet('kv','dataset');}catch(e){} }
+    if(m){meta=m;if(!meta.folders)meta.folders=[];if(!meta.classes)meta.classes={};Object.keys(meta.classes).forEach(n=>{if(!meta.classes[n].steps)meta.classes[n].steps=[];});}
+    if(ds&&classifier){const d={};Object.keys(ds).forEach(k=>{d[k]=tf.tensor(ds[k].data,ds[k].shape);});if(Object.keys(d).length)classifier.setClassifierDataset(d);}
   }catch(e){console.warn('読み込み失敗',e);}
 }
-function migrateOld(){
+
+/* 旧データ（localStorage）があればIndexedDBへ移す */
+async function migrateOld(){
   try{
+    const v3=localStorage.getItem('kikai_v3');
+    if(v3){
+      const o=JSON.parse(v3);const m=o.meta||{folders:[],classes:{}};
+      for(const n of Object.keys(m.classes||{})){
+        const c=m.classes[n];c.steps=c.steps||[];const ns=[];
+        for(const s of c.steps){
+          if(typeof s==='string'&&s.startsWith('data:')){const id='img_'+Date.now()+'_'+Math.random().toString(36).slice(2,7);try{await idbPut('images',id,s);ns.push(id);}catch(e){}}
+          else ns.push(s);
+        }
+        c.steps=ns;
+      }
+      await idbPut('kv','meta',m);if(o.ds)await idbPut('kv','dataset',o.ds);
+      try{localStorage.removeItem('kikai_v3');}catch(e){}
+      return;
+    }
     const v2=localStorage.getItem('kikai_v2');
-    if(v2){const o=JSON.parse(v2);const classes={};if(o.meta&&o.meta.classes)Object.keys(o.meta.classes).forEach(n=>{classes[n]={folder:o.meta.classes[n].folder||null,steps:[]};});localStorage.setItem(STORE_KEY,JSON.stringify({meta:{folders:(o.meta&&o.meta.folders)||[],classes},ds:o.ds||{}}));return;}
+    if(v2){const o=JSON.parse(v2);const classes={};if(o.meta&&o.meta.classes)Object.keys(o.meta.classes).forEach(n=>{classes[n]={folder:o.meta.classes[n].folder||null,steps:[]};});await idbPut('kv','meta',{folders:(o.meta&&o.meta.folders)||[],classes});if(o.ds)await idbPut('kv','dataset',o.ds);return;}
     const v1=localStorage.getItem('kikai_step1_knn_v1');
-    if(v1){const od=JSON.parse(v1);const ds={},classes={};Object.keys(od).forEach(n=>{ds[n]={data:od[n].data,shape:od[n].shape};classes[n]={folder:null,steps:[]};});if(Object.keys(ds).length)localStorage.setItem(STORE_KEY,JSON.stringify({meta:{folders:[],classes},ds}));}
+    if(v1){const od=JSON.parse(v1);const ds={},classes={};Object.keys(od).forEach(n=>{ds[n]={data:od[n].data,shape:od[n].shape};classes[n]={folder:null,steps:[]};});if(Object.keys(ds).length){await idbPut('kv','meta',{folders:[],classes});await idbPut('kv','dataset',ds);}}
   }catch(e){console.warn('引き継ぎ失敗',e);}
 }
 
