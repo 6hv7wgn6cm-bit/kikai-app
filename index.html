@@ -406,13 +406,28 @@ function startCapture(){
     if(maxSim < SIM_NEW){ sessionEmb.push({raw,n}); redundantStreak=0; }
     else { redundantStreak++; }
     const got=sessionEmb.length;
-    $('capCount').textContent='角度 '+got+'種';
+    const remaining=Math.max(0,MIN_SAMPLES-got);
+    $('capCount').textContent = remaining>0 ? '角度 '+got+'種（あと'+remaining+'）' : '角度 '+got+'種・十分';
     $('capProgressBar').style.width=Math.min(100,Math.round(got/MIN_SAMPLES*100))+'%';
+    updateGuide(got,remaining);
     // 自動停止：十分多様 かつ しばらく新しい角度が出ていない／または安全上限
     if((got>=MIN_SAMPLES && redundantStreak>=REDUNDANT_STOP) || got>=HARD_CAP){
       stopCapture(false);
     }
   },110);
+}
+function updateGuide(got,remaining){
+  const g=$('capGuide');let t;
+  if(remaining<=0){t='✓ 十分な角度が集まりました。指を離してOK';}
+  else if(redundantStreak>=8){t='同じ向きが続いています。回す・裏返す・角度を変えて';}
+  else{
+    const r=got/MIN_SAMPLES;
+    if(r<0.25)t='まず正面から、ゆっくり回してください';
+    else if(r<0.5)t='横向きにしてみましょう';
+    else if(r<0.75)t='縦向き・斜めからも見せて';
+    else t='裏返しや別の角度も撮りましょう';
+  }
+  g.textContent=t;
 }
 function stopCapture(silent){
   if(!capturing)return;
@@ -457,7 +472,17 @@ function newFolderFromLearn(){
 }
 function newFolder(){const name=(prompt('新しいフォルダ名')||'').trim();if(!name)return;meta.folders.push({id:'f'+Date.now(),name});saveStore();renderLibrary();}
 function renameFolder(id){const f=meta.folders.find(x=>x.id===id);if(!f)return;const name=(prompt('フォルダ名を変更',f.name)||'').trim();if(!name)return;f.name=name;saveStore();renderLibrary();}
-function deleteFolder(id){if(!confirm('このフォルダを削除しますか？（中の器械は「未分類」に移動します）'))return;meta.folders=meta.folders.filter(x=>x.id!==id);Object.keys(meta.classes).forEach(n=>{if(meta.classes[n].folder===id)meta.classes[n].folder=null;});saveStore();renderLibrary();}
+async function deleteFolder(id){
+  const f=meta.folders.find(x=>x.id===id);if(!f)return;
+  const members=Object.keys(meta.classes).filter(n=>meta.classes[n].folder===id);
+  const msg=members.length
+    ? 'フォルダ「'+f.name+'」と、中の器械 '+members.length+'個（学習データ・手順写真すべて）を削除します。\n元に戻せません。よろしいですか？'
+    : 'フォルダ「'+f.name+'」を削除します。よろしいですか？';
+  if(!confirm(msg))return;
+  for(const n of members){await removeClassFull(n);}   // 学習データ・画像も削除
+  meta.folders=meta.folders.filter(x=>x.id!==id);
+  await saveMeta();renderLibrary();
+}
 
 /* ---- 器械の改名・削除・移動 ---- */
 function renameClass(oldName){
@@ -625,6 +650,25 @@ function slideMove(d){
 }
 function closeSlides(){$('slideModal').classList.remove('show');}
 
+/* スライドを左右スワイプで送る */
+(function(){
+  let sx=0,sy=0,tracking=false;
+  const stage=()=>document.getElementById('slideStage');
+  document.addEventListener('touchstart',e=>{
+    const st=stage();if(!st||!document.getElementById('slideModal').classList.contains('show'))return;
+    if(!st.contains(e.target))return;
+    sx=e.touches[0].clientX;sy=e.touches[0].clientY;tracking=true;
+  },{passive:true});
+  document.addEventListener('touchend',e=>{
+    if(!tracking)return;tracking=false;
+    const dx=e.changedTouches[0].clientX-sx, dy=e.changedTouches[0].clientY-sy;
+    if(Math.abs(dx)>50 && Math.abs(dx)>Math.abs(dy)*1.5){
+      if(dx<0) slideMove(1);   // 左スワイプ→次
+      else slideMove(-1);      // 右スワイプ→前
+    }
+  },{passive:true});
+})();
+
 /* ---- 判別 ---- */
 function resetPredictUI(){
   frozen=false;stableName=null;stableCount=0;
@@ -746,21 +790,20 @@ function openExportPanel(){
   html+=`<div class="ep-divider">― または、フォルダを選ぶ ―</div>`;
   meta.folders.forEach(f=>{
     const c=names.filter(n=>meta.classes[n].folder===f.id).length;
-    html+=`<label class="epitem"><input type="checkbox" class="ep_f" value="${f.id}" disabled onchange="onExportPick()"><span>${escapeHtml(f.name)}</span><span class="epc">${c}件</span></label>`;
+    html+=`<label class="epitem"><input type="checkbox" class="ep_f" value="${f.id}" onchange="onExportPick()"><span>${escapeHtml(f.name)}</span><span class="epc">${c}件</span></label>`;
   });
   const unfiled=names.filter(n=>!meta.classes[n].folder).length;
-  if(unfiled)html+=`<label class="epitem"><input type="checkbox" class="ep_f" value="__unfiled__" disabled onchange="onExportPick()"><span>未分類</span><span class="epc">${unfiled}件</span></label>`;
+  if(unfiled)html+=`<label class="epitem"><input type="checkbox" class="ep_f" value="__unfiled__" onchange="onExportPick()"><span>未分類</span><span class="epc">${unfiled}件</span></label>`;
   $('exportList').innerHTML=html;
   $('exportPanel').style.display='block';
 }
 function closeExportPanel(){$('exportPanel').style.display='none';}
 function onExportAllToggle(){
-  const all=$('ep_all').checked;
-  document.querySelectorAll('.ep_f').forEach(c=>{c.disabled=all;if(all)c.checked=false;});
+  if($('ep_all').checked){document.querySelectorAll('.ep_f').forEach(c=>c.checked=false);}
 }
 function onExportPick(){
   const any=[...document.querySelectorAll('.ep_f')].some(c=>c.checked);
-  if(any)$('ep_all').checked=false;
+  $('ep_all').checked=!any;   // フォルダを選んだら「全部」を外す／全部外したら「全部」に戻す
 }
 async function exportSelected(){
   const counts=classifier?classifier.getClassExampleCount():{};
