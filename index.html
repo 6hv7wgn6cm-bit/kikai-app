@@ -268,6 +268,12 @@ video{width:100%;height:100%;object-fit:cover;display:block;background:#0d1316}
         <input id="threshRange" type="range" min="50" max="95" step="5" value="80" oninput="onThresh(this.value)">
         <span class="tnum" id="threshVal">80%</span>
       </div>
+      <div class="threshctrl">
+        <span>厳しさ</span>
+        <input id="gateRange" type="range" min="0" max="80" step="5" value="45" oninput="onGate(this.value)">
+        <span class="tnum" id="gateVal">中</span>
+      </div>
+      <p class="hint" style="text-align:left;margin-top:4px">「厳しさ」を上げるほど、学習した器械に近くないものを<b>「該当なし」</b>として弾きます。背景だけで勝手に名前を言うのを防げます。</p>
       <p class="hint" id="predictTapHint" style="display:none">候補をタップすると分解手順が開きます。</p>
     </div>
   </section>
@@ -293,7 +299,7 @@ let featureModel=null, classifier=null, stream=null;
 let capturing=false, captureTimer=null;
 let sessionEmb=[];                 // 今回の撮影で集めた“多様な角度”の特徴（保存確認まで分類器には入れない）
 let captureName=null, captureFolder=null;
-let predictRAF=null, predictBusy=false, lastT=0, threshold=0.80;
+let predictRAF=null, predictBusy=false, lastT=0, threshold=0.80, simGate=0.45;
 let stableName=null, stableCount=0, frozen=false;
 let meta={folders:[],classes:{}};  // classes[name]={folder, steps:[imageId,...]}
 let stepsEditTarget=null;          // 手順編集中の器械名
@@ -371,15 +377,38 @@ async function goLearn(){
   const cam=await startCamera($('learnVideo'),$('learnMsg'),$('learnMsgText'));
   $('captureBtn').disabled=!cam;
 }
+/* 入力（キーボード）でカメラ映像が止まることがあるので、確実に再開させる */
+function resumeLearnCam(){
+  const v=$('learnVideo');
+  if(v&&v.srcObject){ const r=v.play(); if(r&&r.catch)r.catch(()=>{}); }
+}
 async function goLibrary(){showScreen('library');stopCamera();await ensureModel(null,null);renderLibrary();}
 async function goPredict(){
   showScreen('predict');resetPredictUI();
   const ok=await ensureModel($('predictMsg'),$('predictMsgText'));if(!ok)return;
   if(!classifier||classifier.getNumClasses()<2){$('predictMsg').classList.add('show');$('predictMsgText').innerHTML='まだ学習が足りません。<br>「学習」で2種類以上を覚えさせてください。';return;}
   $('predictMsg').classList.remove('show');
+  buildSimIndex();
   const cam=await startCamera($('predictVideo'),$('predictMsg'),$('predictMsgText'));
   if(cam)startPredictLoop();
 }
+/* 学習例を正規化ベクトルとして展開（該当なし判定に使う） */
+let simIndex=[];
+function buildSimIndex(){
+  simIndex=[];
+  if(!classifier)return;
+  const d=classifier.getClassifierDataset();
+  Object.keys(d).forEach(k=>{
+    const t=d[k];const shape=t.shape;const n=shape[0],dim=shape[1];
+    const flat=t.dataSync();
+    for(let i=0;i<n;i++){
+      const row=new Float32Array(dim);
+      for(let j=0;j<dim;j++)row[j]=flat[i*dim+j];
+      simIndex.push(normalize(row));
+    }
+  });
+}
+function maxSimToIndex(vn){let m=-1;for(const e of simIndex){let s=0;for(let i=0;i<vn.length;i++)s+=vn[i]*e[i];if(s>m)m=s;}return m;}
 
 /* ---- 特徴ベクトルの正規化と類似度（多様性判定用） ---- */
 function normalize(arr){let s=0;for(let i=0;i<arr.length;i++)s+=arr[i]*arr[i];s=Math.sqrt(s)||1;const o=new Float32Array(arr.length);for(let i=0;i<arr.length;i++)o[i]=arr[i]/s;return o;}
@@ -686,15 +715,29 @@ function startPredictLoop(){
     if(t-lastT<200)return;lastT=t;
     if(!v.videoWidth)return;
     predictBusy=true;
-    try{const a=featureModel.infer(v,true);const res=await classifier.predictClass(a,5);a.dispose();handlePrediction(res);}catch(e){}
+    try{
+      const a=featureModel.infer(v,true);
+      const arr=a.dataSync().slice();
+      const res=await classifier.predictClass(a,5);
+      a.dispose();
+      const sim=maxSimToIndex(normalize(arr));   // 一番近い学習例との「近さ」
+      handlePrediction(res,sim);
+    }catch(e){}
     predictBusy=false;
   };
   predictRAF=requestAnimationFrame(loop);
 }
 function stopPredictLoop(){if(predictRAF){cancelAnimationFrame(predictRAF);predictRAF=null;}predictBusy=false;}
 function topList(conf){return Object.keys(conf).sort((a,b)=>conf[b]-conf[a]);}
-function handlePrediction(res){
+function handlePrediction(res,sim){
   const conf=res.confidences;const order=topList(conf);const top=order[0],topVal=conf[top];
+  // どの学習例にも十分近くない＝「該当なし」（背景だけ等で勝手に断定しない）
+  if(sim!==undefined && sim<simGate){
+    stableName=null;stableCount=0;
+    $('ranks').innerHTML='';
+    $('verdict').className='verdict idle';$('verdict').textContent='該当なし（器械を枠に映してください）';
+    return;
+  }
   renderRanks(order,conf,false);
   if(topVal>=threshold){
     if(top===stableName)stableCount++;else{stableName=top;stableCount=1;}
@@ -731,6 +774,7 @@ function restartPredict(){
   else{v.play().catch(()=>{});startPredictLoop();}
 }
 function onThresh(v){threshold=v/100;$('threshVal').textContent=v+'%';}
+function onGate(v){simGate=v/100;const n=+v;$('gateVal').textContent=n<=20?'弱':n<=40?'やや弱':n<=55?'中':n<=70?'やや強':'強';}
 
 /* ---- 端末内 保存・復元（IndexedDBへ。容量が大きく写真も入る） ---- */
 async function saveMeta(){
@@ -943,6 +987,10 @@ function normalizeClass(n){
 function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function jsq(s){return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'");}
 document.addEventListener('visibilitychange',()=>{if(document.hidden){stopCapture(true);stopPredictLoop();}});
+/* キーボードを閉じた／入力欄から離れたらカメラを再開（フリーズ対策） */
+['nameInput','folderSelect'].forEach(id=>{const el=document.getElementById(id);if(el){el.addEventListener('blur',()=>setTimeout(resumeLearnCam,150));el.addEventListener('change',()=>setTimeout(resumeLearnCam,150));}});
+$('learnVideo').addEventListener('click',resumeLearnCam);
+window.addEventListener('focusout',()=>{const s=document.getElementById('learn');if(s&&s.classList.contains('active'))setTimeout(resumeLearnCam,150);});
 </script>
 </body>
 </html>
