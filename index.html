@@ -27,24 +27,22 @@ header.bar{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bot
 .tag{margin-left:auto;font-size:11px;font-weight:700;color:var(--steel-500);border:1px solid var(--steel-100);border-radius:999px;padding:3px 9px}
 .back{appearance:none;border:none;background:none;color:var(--scrub);font-size:15px;font-weight:600;padding:6px 2px;margin-bottom:6px;cursor:pointer;width:max-content}
 
-/* home */
-.hero{padding:26px 4px 8px}
+.hero{padding:24px 4px 8px}
 .hero .eyebrow{font-size:12px;font-weight:700;letter-spacing:.14em;color:var(--scrub)}
-.hero h1{font-size:24px;font-weight:700;margin:.4em 0 .25em;line-height:1.3}
+.hero h1{font-size:23px;font-weight:700;margin:.4em 0 .25em;line-height:1.3}
 .hero p{color:var(--steel-500);font-size:14px;margin:0}
-.menu{display:grid;gap:13px;margin-top:24px}
-.tile{appearance:none;text-align:left;border:1px solid var(--steel-100);background:var(--panel);border-radius:var(--radius);padding:18px;cursor:pointer;box-shadow:var(--shadow);display:flex;align-items:center;gap:15px}
+.menu{display:grid;gap:12px;margin-top:22px}
+.tile{appearance:none;text-align:left;border:1px solid var(--steel-100);background:var(--panel);border-radius:var(--radius);padding:17px;cursor:pointer;box-shadow:var(--shadow);display:flex;align-items:center;gap:15px}
 .tile:active{transform:scale(.99)}
-.tile .ico{width:46px;height:46px;border-radius:12px;flex:none;display:grid;place-items:center;background:var(--scrub-tint);color:var(--scrub-dark)}
-.tile .ico svg{width:25px;height:25px}
+.tile .ico{width:44px;height:44px;border-radius:12px;flex:none;display:grid;place-items:center;background:var(--scrub-tint);color:var(--scrub-dark)}
+.tile .ico svg{width:24px;height:24px}
 .tile h2{margin:0;font-size:17px}
 .tile small{color:var(--steel-500);font-size:13px}
 .tile .chev{margin-left:auto;color:var(--steel-300);font-size:20px}
-.notice{margin-top:20px;font-size:12px;color:var(--steel-500);background:var(--panel);border:1px dashed var(--steel-300);border-radius:12px;padding:12px 14px}
+.notice{margin-top:18px;font-size:12px;color:var(--steel-500);background:var(--panel);border:1px dashed var(--steel-300);border-radius:12px;padding:12px 14px}
 .notice b{color:var(--steel-700)}
 .foot-note{margin-top:auto;padding-top:16px;font-size:11px;color:var(--steel-300);text-align:center}
 
-/* camera */
 .viewport{position:relative;width:100%;aspect-ratio:3/4;background:#0d1316;border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);margin-bottom:14px}
 video{width:100%;height:100%;object-fit:cover;display:block;background:#0d1316}
 .reticle{position:absolute;inset:14px;border:2px solid rgba(255,255,255,.5);border-radius:10px;pointer-events:none}
@@ -59,16 +57,20 @@ video{width:100%;height:100%;object-fit:cover;display:block;background:#0d1316}
 .capbadge.show{display:flex}
 .capbadge .dot{width:9px;height:9px;border-radius:50%;background:#ff5a5a;animation:pulse 1s infinite}
 @keyframes pulse{50%{opacity:.3}}
+.guide{position:absolute;left:12px;right:12px;bottom:12px;display:none;background:rgba(13,19,22,.72);color:#fff;border-radius:10px;padding:9px 12px;font-size:13px;text-align:center}
+.guide.show{display:block}
+.progress{position:absolute;left:12px;right:12px;top:46px;height:6px;border-radius:999px;background:rgba(255,255,255,.25);overflow:hidden;display:none}
+.progress.show{display:block}
+.progress i{display:block;height:100%;width:0%;background:#3fd0c9;transition:width .2s}
 .frozen-badge{position:absolute;top:12px;left:12px;display:none;align-items:center;gap:6px;background:rgba(14,124,123,.9);color:#fff;border-radius:999px;padding:6px 12px;font-size:13px;font-weight:700}
 .frozen-badge.show{display:flex}
 
-/* form */
 .field{margin:2px 0 12px}
 .field label{display:block;font-size:13px;font-weight:600;color:var(--steel-700);margin-bottom:6px}
 .field input,.field select{width:100%;font-size:16px;padding:12px 13px;border:1px solid var(--steel-300);border-radius:11px;background:var(--panel);color:var(--steel-900)}
 .field input:focus,.field select:focus{outline:none;border-color:var(--scrub);box-shadow:0 0 0 3px var(--scrub-tint)}
 .row2{display:flex;gap:10px}
-.row2 .field{flex:1}
+.fbtn{flex:0 0 auto;align-self:flex-end;margin-bottom:12px}
 .btn{appearance:none;border:none;border-radius:12px;font-size:16px;font-weight:700;padding:14px 18px;cursor:pointer;width:100%}
 .btn:active{transform:scale(.99)}
 .btn:disabled{opacity:.45}
@@ -80,7 +82,6 @@ video{width:100%;height:100%;object-fit:cover;display:block;background:#0d1316}
 .linkrow{margin-top:14px;text-align:center}
 .linkrow button{appearance:none;border:none;background:none;color:var(--scrub);font-weight:600;font-size:14px;cursor:pointer}
 
-/* library / class rows */
 .sec-title{font-size:13px;letter-spacing:.04em;color:var(--steel-500);font-weight:700;margin:18px 2px 8px;display:flex;align-items:center}
 .sec-title .add{margin-left:auto}
 .folder{border:1px solid var(--steel-100);border-radius:12px;background:var(--panel);margin-bottom:12px;overflow:hidden}
@@ -95,18 +96,20 @@ video{width:100%;height:100%;object-fit:cover;display:block;background:#0d1316}
 .crow:first-child{border-top:none}
 .crow .nm{font-weight:600}
 .crow .ct{font-size:12px;color:var(--steel-500);background:var(--paper);border:1px solid var(--steel-100);border-radius:999px;padding:2px 8px}
+.crow .haspx{font-size:11px;color:var(--scrub);font-weight:700}
 .crow .act{margin-left:auto;display:flex;gap:4px;align-items:center}
-.crow select{font-size:12px;padding:5px 6px;border:1px solid var(--steel-100);border-radius:8px;background:var(--panel);max-width:120px}
+.crow select{font-size:12px;padding:5px 6px;border:1px solid var(--steel-100);border-radius:8px;background:var(--panel);max-width:108px}
 .empty{color:var(--steel-500);font-size:13px;text-align:center;padding:16px;border:1px dashed var(--steel-300);border-radius:11px;margin-top:8px}
 
-/* predict result */
 .readout{background:var(--panel);border:1px solid var(--steel-100);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow)}
 .verdict-label{font-size:12px;font-weight:700;letter-spacing:.1em;color:var(--steel-500)}
-.verdict{font-size:26px;font-weight:700;margin:3px 0 2px;line-height:1.25;min-height:1.2em}
+.verdict{font-size:25px;font-weight:700;margin:3px 0 2px;line-height:1.25;min-height:1.2em}
 .verdict.idle{color:var(--steel-300);font-size:19px}
 .verdict.waiting{color:var(--amber);font-size:19px}
-.ranks{margin-top:14px;display:grid;gap:10px}
-.rank{display:flex;align-items:center;gap:11px}
+.ranks{margin-top:14px;display:grid;gap:9px}
+.rank{display:flex;align-items:center;gap:11px;border:1px solid var(--steel-100);border-radius:11px;padding:9px 11px;background:var(--panel);text-align:left;width:100%;cursor:default}
+.rank.tappable{cursor:pointer}
+.rank.tappable:active{transform:scale(.99)}
 .rank .no{width:26px;height:26px;border-radius:7px;flex:none;display:grid;place-items:center;font-weight:700;font-size:13px;background:var(--steel-100);color:var(--steel-700)}
 .rank.first .no{background:var(--scrub);color:#fff}
 .rank .body{flex:1;min-width:0}
@@ -115,38 +118,64 @@ video{width:100%;height:100%;object-fit:cover;display:block;background:#0d1316}
 .rank .rpct{font-weight:700;color:var(--steel-700)}
 .rank .bar{height:8px;border-radius:999px;background:var(--steel-100);overflow:hidden}
 .rank .bar i{display:block;height:100%;background:var(--scrub);width:0%}
-.rank.first .bar i{background:var(--scrub)}
-.predict-actions{margin-top:16px;display:flex;gap:10px}
+.rank .go{margin-left:8px;color:var(--scrub);font-size:12px;font-weight:700;white-space:nowrap}
+.rank .go.none{color:var(--steel-300)}
+.predict-actions{margin-top:16px}
 .threshctrl{margin-top:16px;display:flex;align-items:center;gap:12px;font-size:13px;color:var(--steel-700)}
 .threshctrl input[type=range]{flex:1;accent-color:var(--scrub)}
+
+/* steps editor */
+.stepgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px}
+.stepcard{border:1px solid var(--steel-100);border-radius:11px;overflow:hidden;background:var(--panel);position:relative}
+.stepcard img{width:100%;aspect-ratio:1/1;object-fit:cover;display:block;background:var(--steel-100)}
+.stepcard .lbl{position:absolute;top:6px;left:6px;background:rgba(14,124,123,.92);color:#fff;font-size:12px;font-weight:700;border-radius:7px;padding:2px 8px}
+.stepcard .x{position:absolute;top:6px;right:6px;background:rgba(13,19,22,.7);color:#fff;border:none;width:26px;height:26px;border-radius:7px;font-size:15px;cursor:pointer}
+.addstep{border:2px dashed var(--steel-300);border-radius:11px;display:grid;place-items:center;aspect-ratio:1/1;color:var(--steel-500);font-size:13px;cursor:pointer;background:var(--panel);text-align:center;padding:8px}
+.addstep:active{border-color:var(--scrub);color:var(--scrub)}
+
+/* slide viewer (modal) */
+.modal{position:fixed;inset:0;background:rgba(13,19,22,.92);display:none;flex-direction:column;z-index:50}
+.modal.show{display:flex}
+.modal .mhead{display:flex;align-items:center;gap:10px;padding:16px;color:#fff}
+.modal .mtitle{font-weight:700;font-size:16px}
+.modal .mclose{margin-left:auto;background:rgba(255,255,255,.15);color:#fff;border:none;width:38px;height:38px;border-radius:10px;font-size:18px;cursor:pointer}
+.modal .stage{flex:1;display:grid;place-items:center;padding:0 16px;min-height:0}
+.modal .stage img{max-width:100%;max-height:100%;border-radius:12px;object-fit:contain}
+.modal .stepno{color:#fff;text-align:center;font-weight:700;font-size:15px;margin:14px 0 4px}
+.modal .nav{display:flex;gap:10px;padding:16px;padding-bottom:calc(16px + env(safe-area-inset-bottom))}
+.modal .nav button{flex:1;background:rgba(255,255,255,.15);color:#fff;border:none;border-radius:12px;padding:15px;font-size:16px;font-weight:700;cursor:pointer}
+.modal .nav button:disabled{opacity:.35}
+.modal .nav .main{background:var(--scrub)}
+.modal .empty-steps{color:#cdd6da;text-align:center;padding:40px 24px;font-size:14px;line-height:1.8}
+.modal .empty-steps .btn{margin-top:16px;max-width:240px}
 </style>
 </head>
 <body>
 <div class="app">
-  <header class="bar"><span class="brand">器械分解学習アプリ</span><span class="tag" id="topTag">検証用</span></header>
+  <header class="bar"><span class="brand">器械分解学習アプリ</span><span class="tag">検証用</span></header>
 
   <!-- HOME -->
   <section id="home" class="screen active">
     <div class="hero">
       <div class="eyebrow">かざせば、判る</div>
-      <h1>器械を写すと<br>「これは何か」を判別します</h1>
-      <p>覚えさせる・見分ける・整理する。すべてこの端末の中だけで動きます。</p>
+      <h1>器械を写すと<br>「これは何か」と分解手順が出ます</h1>
+      <p>覚える・見分ける・整理する・手順を見る。すべて端末内で動きます。</p>
     </div>
     <div class="menu">
       <button class="tile" onclick="goLearn()">
         <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></span>
-        <span><h2>学習</h2><small>器械に名前をつけて覚えさせる</small></span><span class="chev">›</span>
+        <span><h2>学習</h2><small>器械を覚えさせ、手順を登録する</small></span><span class="chev">›</span>
       </button>
       <button class="tile" onclick="goPredict()">
         <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg></span>
-        <span><h2>判別</h2><small>かざして候補を表示</small></span><span class="chev">›</span>
+        <span><h2>判別</h2><small>かざして候補を表示・手順へ</small></span><span class="chev">›</span>
       </button>
       <button class="tile" onclick="goLibrary()">
         <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/></svg></span>
-        <span><h2>整理棚</h2><small>覚えた器械をフォルダで整理・改名・削除</small></span><span class="chev">›</span>
+        <span><h2>整理棚</h2><small>フォルダ整理・改名・削除・手順編集</small></span><span class="chev">›</span>
       </button>
     </div>
-    <div class="notice"><b>学習用ツールです（医療機器ではありません）。</b><br>識別と表示のみを行います。写真は保存されず、データは端末内だけに保持されます。</div>
+    <div class="notice"><b>学習用ツールです（医療機器ではありません）。</b><br>識別と手順表示のみ。判別用の写真は保存されず、登録した手順写真もデータも端末内だけに保持されます（外部に送信しません）。</div>
     <div class="foot-note">端末内で完結 ・ 通信は初回のAI読み込みのみ</div>
   </section>
 
@@ -154,17 +183,20 @@ video{width:100%;height:100%;object-fit:cover;display:block;background:#0d1316}
   <section id="learn" class="screen">
     <button class="back" onclick="goHome()">‹ もどる</button>
     <div class="row2">
-      <div class="field"><label for="nameInput">器械の名前</label><input id="nameInput" type="text" placeholder="例：青ボールペン" autocomplete="off"></div>
-      <div class="field" style="flex:0 0 42%"><label for="folderSelect">フォルダ</label><select id="folderSelect"></select></div>
+      <div class="field" style="flex:1"><label for="nameInput">器械の名前</label><input id="nameInput" type="text" placeholder="例：青ボールペン" autocomplete="off"></div>
+      <div class="field" style="flex:0 0 38%"><label for="folderSelect">フォルダ</label><select id="folderSelect"></select></div>
+      <button class="btn btn-ghost btn-sm fbtn" onclick="newFolderFromLearn()">＋</button>
     </div>
     <div class="viewport">
       <video id="learnVideo" autoplay playsinline muted></video>
       <div class="reticle"></div>
-      <div class="capbadge" id="capBadge"><span class="dot"></span><span id="capCount">撮影中 0枚</span></div>
+      <div class="capbadge" id="capBadge"><span class="dot"></span><span id="capCount">撮影中</span></div>
+      <div class="progress" id="capProgress"><i id="capProgressBar"></i></div>
+      <div class="guide" id="capGuide">向きを変えて：横 → 縦 → 斜め → 裏返し</div>
       <div class="cam-msg" id="learnMsg"><div><div class="spin"></div><span id="learnMsgText">AIモデルを読み込み中…</span></div></div>
     </div>
     <button class="btn btn-primary" id="captureBtn" onclick="toggleCapture()" disabled>撮影して覚えさせる</button>
-    <p class="hint" id="learnHint">名前を入れ、器械を枠に映してから押す。押している間、<b>ゆっくり回して</b>多角度を撮ります。納得いくまで撮ってOK。</p>
+    <p class="hint" id="learnHint">名前を入れ、器械を枠に映して押す。押している間、<b>色々な向きに回して</b>ください。十分な角度が集まると自動で止まります。</p>
     <div class="linkrow"><button onclick="goLibrary()">整理棚をひらく →</button></div>
   </section>
 
@@ -173,7 +205,17 @@ video{width:100%;height:100%;object-fit:cover;display:block;background:#0d1316}
     <button class="back" onclick="goHome()">‹ もどる</button>
     <div class="sec-title">フォルダと器械<button class="btn btn-ghost btn-sm add" onclick="newFolder()">＋ フォルダ</button></div>
     <div id="libBody"></div>
-    <div class="foot-note">名前や枚数はこの端末内にだけ保存されています</div>
+    <div class="foot-note">名前・枚数・手順はこの端末内にだけ保存されています</div>
+  </section>
+
+  <!-- STEPS EDITOR -->
+  <section id="steps" class="screen">
+    <button class="back" id="stepsBack">‹ もどる</button>
+    <div class="sec-title" id="stepsTitle">分解手順</div>
+    <p class="hint" style="text-align:left;margin:0 2px 8px">写真を順番に追加します。並んだ順に Step1, Step2 … になります。後から差し替え・削除できます。</p>
+    <div class="stepgrid" id="stepGrid"></div>
+    <input type="file" id="stepFile" accept="image/*" style="display:none" onchange="onStepFile(event)">
+    <div style="margin-top:16px"><button class="btn btn-ghost" onclick="goLibrary()">整理棚にもどる</button></div>
   </section>
 
   <!-- PREDICT -->
@@ -198,21 +240,44 @@ video{width:100%;height:100%;object-fit:cover;display:block;background:#0d1316}
         <input id="threshRange" type="range" min="50" max="95" step="5" value="80" oninput="onThresh(this.value)">
         <span class="tnum" id="threshVal">80%</span>
       </div>
+      <p class="hint" id="predictTapHint" style="display:none">候補をタップすると分解手順が開きます。</p>
     </div>
   </section>
 </div>
 
+<!-- SLIDE VIEWER -->
+<div class="modal" id="slideModal">
+  <div class="mhead"><span class="mtitle" id="slideTitle">分解手順</span><button class="mclose" onclick="closeSlides()">✕</button></div>
+  <div class="stepno" id="slideStepNo"></div>
+  <div class="stage" id="slideStage"></div>
+  <div class="nav" id="slideNav">
+    <button id="slidePrev" onclick="slideMove(-1)">‹ 前</button>
+    <button class="main" id="slideNext" onclick="slideMove(1)">次 ›</button>
+  </div>
+</div>
+
 <script>
-/* ============ 器械分解学習アプリ ============
-   MobileNet（特徴抽出）＋ KNN（判別）。端末内で完結。 */
-const STORE_KEY='kikai_v2';
+/* ============ 器械分解学習アプリ（学習・整理棚・手順・判別） ============
+   MobileNet（特徴抽出）＋ KNN（判別）。端末内で完結。外部送信なし。 */
+const STORE_KEY='kikai_v3';
 let featureModel=null, classifier=null, stream=null;
 let capturing=false, captureTimer=null;
+let sessionEmb=[];                 // 今回の撮影で集めた“多様な角度”の特徴（保存確認まで分類器には入れない）
+let captureName=null, captureFolder=null;
 let predictRAF=null, predictBusy=false, lastT=0, threshold=0.80;
 let stableName=null, stableCount=0, frozen=false;
-/* meta: フォルダと、各器械の所属フォルダ */
-let meta={ folders:[], classes:{} };  // classes[name] = {folder: folderId|null}
+let meta={folders:[],classes:{}};  // classes[name]={folder, steps:[dataURL,...]}
+let stepsEditTarget=null;          // 手順編集中の器械名
+let slideName=null, slideIdx=0;
+
 const $=id=>document.getElementById(id);
+
+/* 多様性の判定パラメータ（自動停止の基準） */
+const SIM_NEW=0.90;     // これ未満なら「新しい角度」とみなす
+const MIN_SAMPLES=24;   // 最低これだけ多様な角度を集める
+const REDUNDANT_STOP=22;// 連続でこれだけ「代わり映えしない」と十分とみなす
+const HARD_CAP=120;     // 安全上限
+let redundantStreak=0;
 
 /* ---- スクリプト読み込み（CDN代替つき） ---- */
 function loadScript(urls){return new Promise((res,rej)=>{let i=0;const t=()=>{if(i>=urls.length){rej(new Error('cdn'));return;}const s=document.createElement('script');s.src=urls[i++];s.onload=()=>res();s.onerror=()=>{s.remove();t();};document.head.appendChild(s);};t();});}
@@ -230,7 +295,7 @@ async function ensureModel(msgEl,textEl){
     if(!featureModel){
       if(textEl)textEl.textContent='AIモデルを読み込み中…（初回のみ）';
       try{featureModel=await window.mobilenet.load({version:2,alpha:1.0});}
-      catch(inner){console.warn('v2 fail, try v1',inner);featureModel=await window.mobilenet.load({version:1,alpha:1.0});}
+      catch(inner){console.warn('v2 fail->v1',inner);featureModel=await window.mobilenet.load({version:1,alpha:1.0});}
     }
     loadStore();
     return true;
@@ -246,13 +311,13 @@ async function startCamera(v,msgEl,textEl){
     stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:960}},audio:false});
     v.srcObject=stream;await v.play().catch(()=>{});
     if(msgEl)msgEl.classList.remove('show');return true;
-  }catch(e){console.error(e);if(textEl)textEl.innerHTML='カメラを使えませんでした。<br>カメラ許可と、Safariで開いているかを確認してください。';return false;}
+  }catch(e){console.error(e);if(textEl)textEl.innerHTML='カメラを使えませんでした。<br>カメラ許可と、Safariで開いているか確認してください。';return false;}
 }
 function stopCamera(){if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;}}
 
 /* ---- 画面遷移 ---- */
 function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));$(id).classList.add('active');}
-function goHome(){stopCapture();stopPredictLoop();stopCamera();showScreen('home');}
+function goHome(){stopCapture(true);stopPredictLoop();stopCamera();showScreen('home');}
 async function goLearn(){
   showScreen('learn');renderFolderSelect();
   const ok=await ensureModel($('learnMsg'),$('learnMsgText'));if(!ok)return;
@@ -260,103 +325,123 @@ async function goLearn(){
   const cam=await startCamera($('learnVideo'),$('learnMsg'),$('learnMsgText'));
   $('captureBtn').disabled=!cam;
 }
-async function goLibrary(){
-  showScreen('library');stopCamera();
-  const ok=await ensureModel(null,null); // モデル無しでも一覧は出したいが、KNNデータは必要
-  renderLibrary();
-}
+async function goLibrary(){showScreen('library');stopCamera();await ensureModel(null,null);renderLibrary();}
 async function goPredict(){
   showScreen('predict');resetPredictUI();
   const ok=await ensureModel($('predictMsg'),$('predictMsgText'));if(!ok)return;
-  if(!classifier||classifier.getNumClasses()<2){
-    $('predictMsg').classList.add('show');
-    $('predictMsgText').innerHTML='まだ学習が足りません。<br>「学習」で2種類以上を覚えさせてください。';return;
-  }
+  if(!classifier||classifier.getNumClasses()<2){$('predictMsg').classList.add('show');$('predictMsgText').innerHTML='まだ学習が足りません。<br>「学習」で2種類以上を覚えさせてください。';return;}
   $('predictMsg').classList.remove('show');
   const cam=await startCamera($('predictVideo'),$('predictMsg'),$('predictMsgText'));
   if(cam)startPredictLoop();
 }
 
-/* ---- 学習：押している間ずっと撮る（上限なし） ---- */
-function toggleCapture(){capturing?stopCapture():startCapture();}
+/* ---- 特徴ベクトルの正規化と類似度（多様性判定用） ---- */
+function normalize(arr){let s=0;for(let i=0;i<arr.length;i++)s+=arr[i]*arr[i];s=Math.sqrt(s)||1;const o=new Float32Array(arr.length);for(let i=0;i<arr.length;i++)o[i]=arr[i]/s;return o;}
+function cosSim(a,b){let s=0;for(let i=0;i<a.length;i++)s+=a[i]*b[i];return s;}
+function maxSimToSession(v){let m=-1;for(const e of sessionEmb){const s=cosSim(v,e.n);if(s>m)m=s;}return m;}
+
+/* ---- 学習：押している間だけ、新しい角度を集める／十分で自動停止 ---- */
+function toggleCapture(){capturing?stopCapture(false):startCapture();}
 function startCapture(){
   const name=$('nameInput').value.trim();
   if(!name){flashHint('先に名前を入れてください');$('nameInput').focus();return;}
   if(!featureModel)return;
-  // フォルダ所属を記録（既存なら維持、新規なら現在の選択を反映）
-  const folder=$('folderSelect').value||null;
-  if(!meta.classes[name])meta.classes[name]={folder};
-  else meta.classes[name].folder=folder;
-  capturing=true;let count=classifier.getClassExampleCount()[name]||0;const base=count;
+  captureName=name;captureFolder=$('folderSelect').value||null;
+  sessionEmb=[];redundantStreak=0;capturing=true;
   $('captureBtn').textContent='撮影をとめる';$('captureBtn').classList.replace('btn-primary','btn-stop');
-  $('capBadge').classList.add('show');$('capCount').textContent='合計 '+count+'枚';
+  $('capBadge').classList.add('show');$('capProgress').classList.add('show');$('capGuide').classList.add('show');
   const v=$('learnVideo');
   captureTimer=setInterval(()=>{
     if(!v.videoWidth)return;
-    tf.tidy(()=>{const a=featureModel.infer(v,true);classifier.addExample(a,name);});
-    count++;$('capCount').textContent='合計 '+count+'枚（今回+'+(count-base)+'）';
+    let raw;
+    tf.tidy(()=>{const a=featureModel.infer(v,true);raw=a.dataSync().slice();});
+    const n=normalize(raw);
+    const maxSim = sessionEmb.length? maxSimToSession(n) : -1;
+    if(maxSim < SIM_NEW){ sessionEmb.push({raw,n}); redundantStreak=0; }
+    else { redundantStreak++; }
+    const got=sessionEmb.length;
+    $('capCount').textContent='角度 '+got+'種';
+    $('capProgressBar').style.width=Math.min(100,Math.round(got/MIN_SAMPLES*100))+'%';
+    // 自動停止：十分多様 かつ しばらく新しい角度が出ていない／または安全上限
+    if((got>=MIN_SAMPLES && redundantStreak>=REDUNDANT_STOP) || got>=HARD_CAP){
+      stopCapture(false);
+    }
   },110);
 }
-function stopCapture(){
-  if(!capturing)return;capturing=false;clearInterval(captureTimer);captureTimer=null;
+function stopCapture(silent){
+  if(!capturing)return;
+  capturing=false;clearInterval(captureTimer);captureTimer=null;
   $('captureBtn').textContent='撮影して覚えさせる';$('captureBtn').classList.replace('btn-stop','btn-primary');
-  $('capBadge').classList.remove('show');
+  $('capBadge').classList.remove('show');$('capProgress').classList.remove('show');$('capGuide').classList.remove('show');
+  if(silent){sessionEmb=[];return;}                 // もどる等での強制停止
+  const got=sessionEmb.length;
+  if(got===0)return;
+  const enough = got>=MIN_SAMPLES;
+  const msg = (enough? '十分な角度が集まりました（'+got+'種）。':'まだ少なめです（'+got+'種）。')+'\n「'+captureName+'」として保存しますか？';
+  if(confirm(msg)){
+    commitSession();
+    alert('保存しました。');
+    if(confirm('分解手順の写真を、いま登録しますか？\n（あとで整理棚からでも登録できます）')){
+      openSteps(captureName,'learn');
+    }
+  }else{
+    sessionEmb=[];
+  }
+}
+function commitSession(){
+  // ここで初めて分類器に登録（保存しない選択なら何も残らない）
+  const dim=sessionEmb[0].raw.length;
+  sessionEmb.forEach(e=>{const t=tf.tensor(e.raw,[1,dim]);classifier.addExample(t,captureName);t.dispose();});
+  if(!meta.classes[captureName])meta.classes[captureName]={folder:captureFolder,steps:[]};
+  else meta.classes[captureName].folder=captureFolder;
+  sessionEmb=[];
   saveStore();
 }
 function flashHint(m){const h=$('learnHint');const p=h.innerHTML;h.innerHTML='<b style="color:var(--amber)">'+m+'</b>';setTimeout(()=>h.innerHTML=p,1800);}
 
-/* ---- 整理棚 ---- */
+/* ---- フォルダ ---- */
 function renderFolderSelect(){
   const sel=$('folderSelect');const cur=sel.value;
-  sel.innerHTML='<option value="">（フォルダなし）</option>'+meta.folders.map(f=>`<option value="${f.id}">${escapeHtml(f.name)}</option>`).join('');
-  if(cur)sel.value=cur;
+  sel.innerHTML='<option value="">（なし）</option>'+meta.folders.map(f=>`<option value="${f.id}">${escapeHtml(f.name)}</option>`).join('');
+  if(cur&&meta.folders.some(f=>f.id===cur))sel.value=cur;
 }
-function newFolder(){
+function newFolderFromLearn(){
   const name=(prompt('新しいフォルダ名')||'').trim();if(!name)return;
-  meta.folders.push({id:'f'+Date.now(),name});saveStore();renderLibrary();
+  const id='f'+Date.now();meta.folders.push({id,name});saveStore();renderFolderSelect();$('folderSelect').value=id;
 }
-function renameFolder(id){
-  const f=meta.folders.find(x=>x.id===id);if(!f)return;
-  const name=(prompt('フォルダ名を変更',f.name)||'').trim();if(!name)return;
-  f.name=name;saveStore();renderLibrary();
-}
-function deleteFolder(id){
-  if(!confirm('このフォルダを削除しますか？（中の器械は「未分類」に移動します）'))return;
-  meta.folders=meta.folders.filter(x=>x.id!==id);
-  Object.keys(meta.classes).forEach(n=>{if(meta.classes[n].folder===id)meta.classes[n].folder=null;});
-  saveStore();renderLibrary();
-}
+function newFolder(){const name=(prompt('新しいフォルダ名')||'').trim();if(!name)return;meta.folders.push({id:'f'+Date.now(),name});saveStore();renderLibrary();}
+function renameFolder(id){const f=meta.folders.find(x=>x.id===id);if(!f)return;const name=(prompt('フォルダ名を変更',f.name)||'').trim();if(!name)return;f.name=name;saveStore();renderLibrary();}
+function deleteFolder(id){if(!confirm('このフォルダを削除しますか？（中の器械は「未分類」に移動します）'))return;meta.folders=meta.folders.filter(x=>x.id!==id);Object.keys(meta.classes).forEach(n=>{if(meta.classes[n].folder===id)meta.classes[n].folder=null;});saveStore();renderLibrary();}
+
+/* ---- 器械の改名・削除・移動 ---- */
 function renameClass(oldName){
   const newName=(prompt('器械の名前を変更',oldName)||'').trim();
   if(!newName||newName===oldName)return;
   if(classifier.getClassExampleCount()[newName]){alert('同じ名前がすでにあります');return;}
   const ds=classifier.getClassifierDataset();
   if(ds[oldName]){ds[newName]=ds[oldName];delete ds[oldName];classifier.setClassifierDataset(ds);}
-  meta.classes[newName]=meta.classes[oldName]||{folder:null};delete meta.classes[oldName];
+  meta.classes[newName]=meta.classes[oldName]||{folder:null,steps:[]};delete meta.classes[oldName];
   saveStore();renderLibrary();
 }
-function deleteClass(name){
-  if(!confirm('「'+name+'」の学習データを削除しますか？'))return;
-  classifier.clearClass(name);delete meta.classes[name];saveStore();renderLibrary();
-}
-function moveClass(name,folderId){meta.classes[name]={folder:folderId||null};saveStore();renderLibrary();}
+function deleteClass(name){if(!confirm('「'+name+'」の学習データと手順を削除しますか？'))return;classifier.clearClass(name);delete meta.classes[name];saveStore();renderLibrary();}
+function moveClass(name,folderId){const c=meta.classes[name]||{steps:[]};c.folder=folderId||null;meta.classes[name]=c;saveStore();renderLibrary();}
 
 function renderLibrary(){
   const body=$('libBody');
   const counts=classifier?classifier.getClassExampleCount():{};
   const names=Object.keys(counts);
-  // meta.classes に無い名前を補完（直接学習されたもの）
-  names.forEach(n=>{if(!meta.classes[n])meta.classes[n]={folder:null};});
+  names.forEach(n=>{if(!meta.classes[n])meta.classes[n]={folder:null,steps:[]};if(!meta.classes[n].steps)meta.classes[n].steps=[];});
   if(names.length===0){body.innerHTML='<div class="empty">まだ何も覚えていません。<br>「学習」から器械を覚えさせてください。</div>';return;}
-
   const folderOpts=f=>'<option value="">未分類</option>'+meta.folders.map(x=>`<option value="${x.id}" ${f===x.id?'selected':''}>${escapeHtml(x.name)}</option>`).join('');
-  const rowHtml=n=>`<div class="crow"><span class="nm">${escapeHtml(n)}</span><span class="ct tnum">${counts[n]}枚</span><span class="act">
+  const rowHtml=n=>{
+    const steps=(meta.classes[n].steps||[]).length;
+    return `<div class="crow"><span class="nm">${escapeHtml(n)}</span><span class="ct tnum">${counts[n]}枚</span>${steps?`<span class="haspx">手順${steps}</span>`:''}<span class="act">
       <select onchange="moveClass('${jsq(n)}',this.value)">${folderOpts(meta.classes[n].folder)}</select>
+      <button class="icobtn" title="手順" onclick="openSteps('${jsq(n)}','lib')">🖼</button>
       <button class="icobtn" title="改名" onclick="renameClass('${jsq(n)}')">✎</button>
       <button class="icobtn del" title="削除" onclick="deleteClass('${jsq(n)}')">🗑</button></span></div>`;
-
+  };
   let html='';
-  // 各フォルダ
   meta.folders.forEach(f=>{
     const members=names.filter(n=>meta.classes[n].folder===f.id);
     html+=`<div class="folder"><div class="folder-head"><span class="fname">${escapeHtml(f.name)}</span><span class="fcount">${members.length}件</span>
@@ -364,26 +449,97 @@ function renderLibrary(){
     html+= members.length?members.map(rowHtml).join(''):'<div class="crow" style="color:var(--steel-300);font-size:13px">（空）</div>';
     html+='</div>';
   });
-  // 未分類
   const unfiled=names.filter(n=>!meta.classes[n].folder);
-  if(unfiled.length){
-    html+=`<div class="folder"><div class="folder-head"><span class="fname">未分類</span><span class="fcount">${unfiled.length}件</span></div>`;
-    html+=unfiled.map(rowHtml).join('')+'</div>';
-  }
+  if(unfiled.length){html+=`<div class="folder"><div class="folder-head"><span class="fname">未分類</span><span class="fcount">${unfiled.length}件</span></div>`+unfiled.map(rowHtml).join('')+'</div>';}
   body.innerHTML=html;
 }
 
-/* ---- 判別：候補を第3位まで／確定でカメラ停止 ---- */
+/* ---- 手順（写真）編集 ---- */
+let stepsBackTo='lib';
+function openSteps(name,backTo){
+  stepsEditTarget=name;stepsBackTo=backTo||'lib';
+  if(!meta.classes[name])meta.classes[name]={folder:null,steps:[]};
+  if(!meta.classes[name].steps)meta.classes[name].steps=[];
+  $('stepsTitle').textContent='分解手順：'+name;
+  $('stepsBack').onclick=()=>{ stepsBackTo==='learn'?goLearn():goLibrary(); };
+  stopCamera();showScreen('steps');renderSteps();
+}
+function renderSteps(){
+  const steps=meta.classes[stepsEditTarget].steps;
+  const grid=$('stepGrid');
+  let html=steps.map((src,i)=>`<div class="stepcard"><span class="lbl">Step${i+1}</span><button class="x" onclick="deleteStep(${i})">✕</button><img src="${src}" alt="Step${i+1}"></div>`).join('');
+  html+=`<button class="addstep" onclick="addStep()">＋<br>写真を追加</button>`;
+  grid.innerHTML=html;
+}
+function addStep(){ $('stepFile').value='';$('stepFile').click(); }
+function onStepFile(ev){
+  const file=ev.target.files&&ev.target.files[0];if(!file)return;
+  compressImage(file,1024,0.72).then(dataUrl=>{
+    meta.classes[stepsEditTarget].steps.push(dataUrl);
+    const ok=saveStore();
+    if(!ok){ meta.classes[stepsEditTarget].steps.pop(); } // 保存失敗時は追加を取り消す
+    renderSteps();
+  }).catch(()=>alert('画像を読み込めませんでした。'));
+}
+function deleteStep(i){if(!confirm('Step'+(i+1)+'の写真を削除しますか？'))return;meta.classes[stepsEditTarget].steps.splice(i,1);saveStore();renderSteps();}
+
+/* 画像を縮小してJPEG化（端末内保存を軽くする） */
+function compressImage(file,maxSide,quality){
+  return new Promise((resolve,reject)=>{
+    const img=new Image();const url=URL.createObjectURL(file);
+    img.onload=()=>{
+      let{width:w,height:h}=img;
+      if(w>h&&w>maxSide){h=Math.round(h*maxSide/w);w=maxSide;}
+      else if(h>=w&&h>maxSide){w=Math.round(w*maxSide/h);h=maxSide;}
+      const c=document.createElement('canvas');c.width=w;c.height=h;
+      c.getContext('2d').drawImage(img,0,0,w,h);
+      URL.revokeObjectURL(url);
+      resolve(c.toDataURL('image/jpeg',quality));
+    };
+    img.onerror=()=>{URL.revokeObjectURL(url);reject(new Error('img'));};
+    img.src=url;
+  });
+}
+
+/* ---- スライド表示 ---- */
+function openSlides(name){
+  const steps=(meta.classes[name]&&meta.classes[name].steps)||[];
+  slideName=name;slideIdx=0;
+  $('slideTitle').textContent=name;
+  const m=$('slideModal');m.classList.add('show');
+  if(steps.length===0){
+    $('slideStepNo').textContent='';
+    $('slideStage').innerHTML='<div class="empty-steps">この器械にはまだ分解手順が登録されていません。<br>整理棚から写真を追加できます。</div>';
+    $('slideNav').style.display='none';
+    return;
+  }
+  $('slideNav').style.display='flex';
+  renderSlide();
+}
+function renderSlide(){
+  const steps=meta.classes[slideName].steps;
+  $('slideStepNo').textContent='Step '+(slideIdx+1)+' / '+steps.length;
+  $('slideStage').innerHTML='<img src="'+steps[slideIdx]+'" alt="Step'+(slideIdx+1)+'">';
+  $('slidePrev').disabled=slideIdx===0;
+  $('slideNext').textContent=slideIdx===steps.length-1?'おわり':'次 ›';
+}
+function slideMove(d){
+  const steps=meta.classes[slideName].steps;
+  if(slideIdx===steps.length-1&&d>0){closeSlides();return;}
+  slideIdx=Math.max(0,Math.min(steps.length-1,slideIdx+d));renderSlide();
+}
+function closeSlides(){$('slideModal').classList.remove('show');}
+
+/* ---- 判別 ---- */
 function resetPredictUI(){
   frozen=false;stableName=null;stableCount=0;
   $('verdict').className='verdict idle';$('verdict').textContent='器械を枠に映してください';
-  $('ranks').innerHTML='';$('predictActions').style.display='none';
+  $('ranks').innerHTML='';$('predictActions').style.display='none';$('predictTapHint').style.display='none';
   $('predBadge').classList.remove('show');$('frozenBadge').classList.remove('show');
 }
 function startPredictLoop(){
   stopPredictLoop();frozen=false;
-  $('predBadge').classList.add('show');$('frozenBadge').classList.remove('show');
-  $('predictActions').style.display='none';
+  $('predBadge').classList.add('show');$('frozenBadge').classList.remove('show');$('predictActions').style.display='none';$('predictTapHint').style.display='none';
   const v=$('predictVideo');if(v.paused)v.play().catch(()=>{});
   const loop=async(t)=>{
     predictRAF=requestAnimationFrame(loop);
@@ -391,47 +547,42 @@ function startPredictLoop(){
     if(t-lastT<200)return;lastT=t;
     if(!v.videoWidth)return;
     predictBusy=true;
-    try{
-      const a=featureModel.infer(v,true);
-      const res=await classifier.predictClass(a,5);a.dispose();
-      handlePrediction(res);
-    }catch(e){}
+    try{const a=featureModel.infer(v,true);const res=await classifier.predictClass(a,5);a.dispose();handlePrediction(res);}catch(e){}
     predictBusy=false;
   };
   predictRAF=requestAnimationFrame(loop);
 }
 function stopPredictLoop(){if(predictRAF){cancelAnimationFrame(predictRAF);predictRAF=null;}predictBusy=false;}
-
 function topList(conf){return Object.keys(conf).sort((a,b)=>conf[b]-conf[a]);}
-
 function handlePrediction(res){
-  const conf=res.confidences;const order=topList(conf);
-  const top=order[0],topVal=conf[top];
+  const conf=res.confidences;const order=topList(conf);const top=order[0],topVal=conf[top];
   renderRanks(order,conf,false);
   if(topVal>=threshold){
     if(top===stableName)stableCount++;else{stableName=top;stableCount=1;}
     if(stableCount>=3){freezeResult(order,conf);return;}
     $('verdict').className='verdict';$('verdict').textContent='これは「'+top+'」です';
-  }else{
-    stableName=null;stableCount=0;
-    $('verdict').className='verdict waiting';$('verdict').textContent='もう少しはっきり映してください';
-  }
+  }else{stableName=null;stableCount=0;$('verdict').className='verdict waiting';$('verdict').textContent='もう少しはっきり映してください';}
 }
 function freezeResult(order,conf){
   frozen=true;stopPredictLoop();
-  const v=$('predictVideo');v.pause();           // 最後のフレームで静止
+  const v=$('predictVideo');v.pause();
   $('predBadge').classList.remove('show');$('frozenBadge').classList.add('show');
   $('verdict').className='verdict';$('verdict').textContent='これは「'+order[0]+'」です';
   renderRanks(order,conf,true);
-  $('predictActions').style.display='flex';
+  $('predictActions').style.display='block';$('predictTapHint').style.display='block';
 }
 function renderRanks(order,conf,final){
   const top3=order.slice(0,3);
   $('ranks').innerHTML=top3.map((n,i)=>{
     const p=Math.round(conf[n]*100);
-    return `<div class="rank ${i===0?'first':''}"><div class="no">${i+1}</div><div class="body">
+    const steps=(meta.classes[n]&&meta.classes[n].steps&&meta.classes[n].steps.length)||0;
+    const tappable=final;
+    const go=final?(steps?`手順を見る ›`:`手順なし`):'';
+    return `<button class="rank ${i===0?'first':''} ${tappable?'tappable':''}" ${tappable?`onclick="openSlides('${jsq(n)}')"`:'disabled style="opacity:1"'}>
+      <div class="no">${i+1}</div><div class="body">
       <div class="top"><span class="rname">${escapeHtml(n)}</span><span class="rpct tnum">${p}%</span></div>
-      <div class="bar"><i style="width:${p}%"></i></div></div></div>`;
+      <div class="bar"><i style="width:${p}%"></i></div></div>
+      ${go?`<span class="go ${steps?'':'none'}">${go}</span>`:''}</button>`;
   }).join('');
 }
 function restartPredict(){
@@ -448,32 +599,35 @@ function saveStore(){
     const obj={meta,ds:{}};
     if(classifier){const d=classifier.getClassifierDataset();Object.keys(d).forEach(k=>{obj.ds[k]={data:Array.from(d[k].dataSync()),shape:d[k].shape};});}
     localStorage.setItem(STORE_KEY,JSON.stringify(obj));
-  }catch(e){console.warn('保存できませんでした',e);}
+    return true;
+  }catch(e){
+    console.warn('保存できませんでした',e);
+    alert('端末内の保存容量がいっぱいの可能性があります。手順写真の枚数を減らすか、不要な器械を削除してください。');
+    return false;
+  }
 }
 function loadStore(){
   try{
     let raw=localStorage.getItem(STORE_KEY);
-    if(!raw){ migrateOld(); raw=localStorage.getItem(STORE_KEY); if(!raw)return; }
+    if(!raw){migrateOld();raw=localStorage.getItem(STORE_KEY);if(!raw)return;}
     const obj=JSON.parse(raw);
-    if(obj.meta){meta=obj.meta;if(!meta.folders)meta.folders=[];if(!meta.classes)meta.classes={};}
+    if(obj.meta){meta=obj.meta;if(!meta.folders)meta.folders=[];if(!meta.classes)meta.classes={};Object.keys(meta.classes).forEach(n=>{if(!meta.classes[n].steps)meta.classes[n].steps=[];});}
     if(obj.ds&&classifier){const ds={};Object.keys(obj.ds).forEach(k=>{ds[k]=tf.tensor(obj.ds[k].data,obj.ds[k].shape);});if(Object.keys(ds).length)classifier.setClassifierDataset(ds);}
   }catch(e){console.warn('読み込み失敗',e);}
 }
-
-/* 旧バージョン(STEP1)の学習データがあれば引き継ぐ */
 function migrateOld(){
   try{
-    const old=localStorage.getItem('kikai_step1_knn_v1');if(!old)return;
-    const od=JSON.parse(old);const ds={},classes={};
-    Object.keys(od).forEach(name=>{ds[name]={data:od[name].data,shape:od[name].shape};classes[name]={folder:null};});
-    if(Object.keys(ds).length){localStorage.setItem(STORE_KEY,JSON.stringify({meta:{folders:[],classes},ds}));}
+    const v2=localStorage.getItem('kikai_v2');
+    if(v2){const o=JSON.parse(v2);const classes={};if(o.meta&&o.meta.classes)Object.keys(o.meta.classes).forEach(n=>{classes[n]={folder:o.meta.classes[n].folder||null,steps:[]};});localStorage.setItem(STORE_KEY,JSON.stringify({meta:{folders:(o.meta&&o.meta.folders)||[],classes},ds:o.ds||{}}));return;}
+    const v1=localStorage.getItem('kikai_step1_knn_v1');
+    if(v1){const od=JSON.parse(v1);const ds={},classes={};Object.keys(od).forEach(n=>{ds[n]={data:od[n].data,shape:od[n].shape};classes[n]={folder:null,steps:[]};});if(Object.keys(ds).length)localStorage.setItem(STORE_KEY,JSON.stringify({meta:{folders:[],classes},ds}));}
   }catch(e){console.warn('引き継ぎ失敗',e);}
 }
 
-/* ---- 小物 ---- */
+/* ---- 小物（入力の安全化：表示前にHTMLエスケープ） ---- */
 function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function jsq(s){return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'");}
-document.addEventListener('visibilitychange',()=>{if(document.hidden){stopCapture();stopPredictLoop();}});
+document.addEventListener('visibilitychange',()=>{if(document.hidden){stopCapture(true);stopPredictLoop();}});
 </script>
 </body>
 </html>
