@@ -205,6 +205,14 @@ video{width:100%;height:100%;object-fit:cover;display:block;background:#0d1316}
     <button class="back" onclick="goHome()">‹ もどる</button>
     <div class="sec-title">フォルダと器械<button class="btn btn-ghost btn-sm add" onclick="newFolder()">＋ フォルダ</button></div>
     <div id="libBody"></div>
+
+    <div class="sec-title">バックアップ・配布</div>
+    <p class="hint" style="text-align:left;margin:0 2px 10px">全データを1ファイルに書き出して保存・配布できます。別端末で読み込むと、その端末の内容は<b>置き換わり</b>ます。</p>
+    <div style="display:flex;gap:10px">
+      <button class="btn btn-ghost" onclick="exportAll()">⬇ 書き出し</button>
+      <button class="btn btn-ghost" onclick="document.getElementById('importFile').click()">⬆ 読み込み</button>
+    </div>
+    <input type="file" id="importFile" accept="application/json,.json" style="display:none" onchange="onImportFile(event)">
     <div class="foot-note">名前・枚数・手順はこの端末内にだけ保存されています</div>
   </section>
 
@@ -284,6 +292,7 @@ function idbPut(store,key,val){return new Promise((res,rej)=>{db().then(d=>{cons
 function idbGet(store,key){return new Promise((res,rej)=>{db().then(d=>{const tx=d.transaction(store,'readonly');const r=tx.objectStore(store).get(key);r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);}).catch(rej);});}
 function idbDel(store,key){return new Promise((res)=>{db().then(d=>{const tx=d.transaction(store,'readwrite');tx.objectStore(store).delete(key);tx.oncomplete=()=>res(true);tx.onerror=()=>res(false);}).catch(()=>res(false));});}
 async function preloadImages(ids){for(const id of ids){if(imgCache[id])continue;try{const v=await idbGet('images',id);if(v)imgCache[id]=v;}catch(e){}}}
+function clearImages(){return new Promise((res)=>{db().then(d=>{const tx=d.transaction('images','readwrite');tx.objectStore('images').clear();tx.oncomplete=()=>res(true);tx.onerror=()=>res(false);}).catch(()=>res(false));});}
 
 
 const $=id=>document.getElementById(id);
@@ -682,6 +691,65 @@ async function migrateOld(){
     const v1=localStorage.getItem('kikai_step1_knn_v1');
     if(v1){const od=JSON.parse(v1);const ds={},classes={};Object.keys(od).forEach(n=>{ds[n]={data:od[n].data,shape:od[n].shape};classes[n]={folder:null,steps:[]};});if(Object.keys(ds).length){await idbPut('kv','meta',{folders:[],classes});await idbPut('kv','dataset',ds);}}
   }catch(e){console.warn('引き継ぎ失敗',e);}
+}
+
+/* ---- 書き出し（全データを1ファイルに） ---- */
+async function exportAll(){
+  try{
+    const names=Object.keys(meta.classes||{});
+    if(names.length===0&&meta.folders.length===0){alert('書き出すデータがありません。');return;}
+    const images={};
+    for(const n of names){for(const id of (meta.classes[n].steps||[])){if(!images[id]){try{const v=await idbGet('images',id);if(v)images[id]=v;}catch(e){}}}}
+    const dataset={};
+    if(classifier){const d=classifier.getClassifierDataset();Object.keys(d).forEach(k=>{dataset[k]={data:Array.from(d[k].dataSync()),shape:d[k].shape};});}
+    const payload={app:'kikai',version:3,exportedAt:new Date().toISOString(),meta,dataset,images};
+    const json=JSON.stringify(payload);
+    const fname='kikai-backup-'+new Date().toISOString().slice(0,10)+'.json';
+    const blob=new Blob([json],{type:'application/json'});
+    const file=new File([blob],fname,{type:'application/json'});
+    // iOS：共有シート（ファイルに保存／AirDrop）が使えれば優先
+    if(navigator.canShare&&navigator.canShare({files:[file]})){
+      try{await navigator.share({files:[file],title:fname});return;}catch(e){if(e&&e.name==='AbortError')return;}
+    }
+    // フォールバック：ダウンロード
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');a.href=url;a.download=fname;document.body.appendChild(a);a.click();a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),4000);
+  }catch(e){console.error(e);alert('書き出しに失敗しました。');}
+}
+
+/* ---- 読み込み（全置き換え） ---- */
+function onImportFile(ev){
+  const file=ev.target.files&&ev.target.files[0];ev.target.value='';if(!file)return;
+  const reader=new FileReader();
+  reader.onload=async()=>{
+    let payload;
+    try{payload=JSON.parse(reader.result);}catch(e){alert('このファイルは読み込めません（形式が違います）。');return;}
+    if(!payload||payload.app!=='kikai'||!payload.meta){alert('このアプリのバックアップファイルではないようです。');return;}
+    const cls=payload.meta.classes?Object.keys(payload.meta.classes).length:0;
+    const fol=payload.meta.folders?payload.meta.folders.length:0;
+    if(!confirm('今のデータ（フォルダ・器械・手順）はすべて置き換わります。\n読み込むと フォルダ'+fol+'件・器械'+cls+'件 がセットされます。\nよろしいですか？'))return;
+    await importReplace(payload);
+  };
+  reader.onerror=()=>alert('ファイルを読み込めませんでした。');
+  reader.readAsText(file);
+}
+async function importReplace(payload){
+  try{
+    await clearImages();imgCache={};
+    if(payload.images){for(const id of Object.keys(payload.images)){try{await idbPut('images',id,payload.images[id]);}catch(e){}}}
+    meta=payload.meta;if(!meta.folders)meta.folders=[];if(!meta.classes)meta.classes={};
+    Object.keys(meta.classes).forEach(n=>{if(!meta.classes[n].steps)meta.classes[n].steps=[];});
+    if(classifier){
+      if(payload.dataset&&Object.keys(payload.dataset).length){
+        const ds={};Object.keys(payload.dataset).forEach(k=>{ds[k]=tf.tensor(payload.dataset[k].data,payload.dataset[k].shape);});
+        classifier.setClassifierDataset(ds);
+      }else{classifier.clearAllClasses();}
+    }
+    await saveMeta();
+    alert('読み込みました。');
+    renderLibrary();
+  }catch(e){console.error(e);alert('読み込みに失敗しました。');}
 }
 
 /* ---- 小物（入力の安全化：表示前にHTMLエスケープ） ---- */
