@@ -148,6 +148,18 @@ video{width:100%;height:100%;object-fit:cover;display:block;background:#0d1316}
 .modal .nav .main{background:var(--scrub)}
 .modal .empty-steps{color:#cdd6da;text-align:center;padding:40px 24px;font-size:14px;line-height:1.8}
 .modal .empty-steps .btn{margin-top:16px;max-width:240px}
+.modal .caption{color:#fff;background:rgba(0,0,0,.4);border-radius:12px;margin:12px 16px 0;padding:12px 14px;font-size:15px;line-height:1.6;min-height:0;display:none}
+.modal .caption.show{display:block}
+.modal .caption .tap{display:block;color:#9fb6b5;font-size:11px;margin-top:6px}
+.stepcap{width:100%;border:none;border-top:1px solid var(--steel-100);font-size:13px;padding:9px 10px;color:var(--steel-900);background:var(--panel)}
+.stepcap:focus{outline:none;background:var(--scrub-tint)}
+.exportpanel{margin-top:12px;border:1px solid var(--steel-100);border-radius:12px;background:var(--panel);padding:14px}
+.ep-title{font-size:13px;font-weight:700;color:var(--steel-700);margin-bottom:10px}
+.epitem{display:flex;align-items:center;gap:10px;padding:9px 4px;border-top:1px solid var(--steel-100);font-size:14px}
+.epitem:first-of-type{border-top:none}
+.epitem input{width:18px;height:18px;accent-color:var(--scrub)}
+.epitem .epc{margin-left:auto;font-size:12px;color:var(--steel-500)}
+.ep-divider{font-size:11px;color:var(--steel-300);text-align:center;margin:8px 0 2px}
 </style>
 </head>
 <body>
@@ -209,8 +221,16 @@ video{width:100%;height:100%;object-fit:cover;display:block;background:#0d1316}
     <div class="sec-title">バックアップ・配布</div>
     <p class="hint" style="text-align:left;margin:0 2px 10px">全データを1ファイルに書き出して保存・配布できます。別端末で読み込むと、その端末の内容は<b>置き換わり</b>ます。</p>
     <div style="display:flex;gap:10px">
-      <button class="btn btn-ghost" onclick="exportAll()">⬇ 書き出し</button>
+      <button class="btn btn-ghost" onclick="openExportPanel()">⬇ 書き出し</button>
       <button class="btn btn-ghost" onclick="document.getElementById('importFile').click()">⬆ 読み込み</button>
+    </div>
+    <div id="exportPanel" class="exportpanel" style="display:none">
+      <div class="ep-title">書き出す範囲を選ぶ</div>
+      <div id="exportList"></div>
+      <div style="display:flex;gap:10px;margin-top:12px">
+        <button class="btn btn-ghost btn-sm" onclick="closeExportPanel()">やめる</button>
+        <button class="btn btn-primary btn-sm" onclick="exportSelected()">この内容で書き出し</button>
+      </div>
     </div>
     <input type="file" id="importFile" accept="application/json,.json" style="display:none" onchange="onImportFile(event)">
     <div class="foot-note">名前・枚数・手順はこの端末内にだけ保存されています</div>
@@ -257,7 +277,8 @@ video{width:100%;height:100%;object-fit:cover;display:block;background:#0d1316}
 <div class="modal" id="slideModal">
   <div class="mhead"><span class="mtitle" id="slideTitle">分解手順</span><button class="mclose" onclick="closeSlides()">✕</button></div>
   <div class="stepno" id="slideStepNo"></div>
-  <div class="stage" id="slideStage"></div>
+  <div class="stage" id="slideStage" onclick="toggleCaption()"></div>
+  <div class="caption" id="slideCaption"></div>
   <div class="nav" id="slideNav">
     <button id="slidePrev" onclick="slideMove(-1)">‹ 前</button>
     <button class="main" id="slideNext" onclick="slideMove(1)">次 ›</button>
@@ -417,7 +438,7 @@ function commitSession(){
   // ここで初めて分類器に登録（保存しない選択なら何も残らない）
   const dim=sessionEmb[0].raw.length;
   sessionEmb.forEach(e=>{const t=tf.tensor(e.raw,[1,dim]);classifier.addExample(t,captureName);t.dispose();});
-  if(!meta.classes[captureName])meta.classes[captureName]={folder:captureFolder,steps:[]};
+  if(!meta.classes[captureName])meta.classes[captureName]={folder:captureFolder,steps:[],stepTexts:[]};
   else meta.classes[captureName].folder=captureFolder;
   sessionEmb=[];
   saveStore();
@@ -461,7 +482,7 @@ function renderLibrary(){
   const body=$('libBody');
   const counts=classifier?classifier.getClassExampleCount():{};
   const names=Object.keys(counts);
-  names.forEach(n=>{if(!meta.classes[n])meta.classes[n]={folder:null,steps:[]};if(!meta.classes[n].steps)meta.classes[n].steps=[];});
+  names.forEach(n=>{if(!meta.classes[n])meta.classes[n]={folder:null,steps:[],stepTexts:[]};normalizeClass(n);});
   if(names.length===0&&meta.folders.length===0){body.innerHTML='<div class="empty">まだフォルダも器械もありません。<br>「＋ フォルダ」で作るか、「学習」から覚えさせてください。</div>';return;}
   const folderOpts=f=>'<option value="">未分類</option>'+meta.folders.map(x=>`<option value="${x.id}" ${f===x.id?'selected':''}>${escapeHtml(x.name)}</option>`).join('');
   const rowHtml=n=>{
@@ -489,8 +510,8 @@ function renderLibrary(){
 let stepsBackTo='lib';
 async function openSteps(name,backTo){
   stepsEditTarget=name;stepsBackTo=backTo||'lib';
-  if(!meta.classes[name])meta.classes[name]={folder:null,steps:[]};
-  if(!meta.classes[name].steps)meta.classes[name].steps=[];
+  if(!meta.classes[name])meta.classes[name]={folder:null,steps:[],stepTexts:[]};
+  normalizeClass(name);
   $('stepsTitle').textContent='分解手順：'+name;
   $('stepsBack').onclick=()=>{ stepsBackTo==='learn'?goLearn():goLibrary(); };
   stopCamera();showScreen('steps');
@@ -498,14 +519,23 @@ async function openSteps(name,backTo){
   renderSteps();
 }
 function renderSteps(){
-  const steps=meta.classes[stepsEditTarget].steps;
+  const c=meta.classes[stepsEditTarget];
   const grid=$('stepGrid');
-  let html=steps.map((id,i)=>{
+  let html=c.steps.map((id,i)=>{
     const src=imgCache[id]||'';
-    return `<div class="stepcard"><span class="lbl">Step${i+1}</span><button class="x" onclick="deleteStep(${i})">✕</button><img src="${src}" alt="Step${i+1}"></div>`;
+    const txt=escapeHtml(c.stepTexts[i]||'');
+    return `<div class="stepcard"><span class="lbl">Step${i+1}</span><button class="x" onclick="deleteStep(${i})">✕</button>
+      <img src="${src}" alt="Step${i+1}">
+      <input class="stepcap" type="text" placeholder="説明（任意）" value="${txt}" oninput="onStepText(${i},this.value)"></div>`;
   }).join('');
   html+=`<button class="addstep" onclick="addStep()">＋<br>写真を追加</button>`;
   grid.innerHTML=html;
+}
+let stepTextTimer=null;
+function onStepText(i,val){
+  meta.classes[stepsEditTarget].stepTexts[i]=val;
+  clearTimeout(stepTextTimer);
+  stepTextTimer=setTimeout(()=>saveMeta(),400);   // 入力が落ち着いたら保存
 }
 function addStep(){ $('stepFile').value='';$('stepFile').click(); }
 function onStepFile(ev){
@@ -521,6 +551,7 @@ function onStepFile(ev){
     }
     imgCache[id]=dataUrl;
     meta.classes[stepsEditTarget].steps.push(id);
+    meta.classes[stepsEditTarget].stepTexts.push('');
     await saveMeta();                                  // 参照（軽い情報）だけ保存
     renderSteps();
   }).catch(()=>alert('画像を読み込めませんでした。'));
@@ -528,6 +559,7 @@ function onStepFile(ev){
 async function deleteStep(i){
   if(!confirm('Step'+(i+1)+'の写真を削除しますか？'))return;
   const id=meta.classes[stepsEditTarget].steps.splice(i,1)[0];
+  meta.classes[stepsEditTarget].stepTexts.splice(i,1);
   if(id){await idbDel('images',id);delete imgCache[id];}
   await saveMeta();renderSteps();
 }
@@ -553,12 +585,13 @@ function compressImage(file,maxSide,quality){
 /* ---- スライド表示 ---- */
 async function openSlides(name){
   const steps=(meta.classes[name]&&meta.classes[name].steps)||[];
-  slideName=name;slideIdx=0;
+  slideName=name;slideIdx=0;captionHidden=false;
   $('slideTitle').textContent=name;
   const m=$('slideModal');m.classList.add('show');
   if(steps.length===0){
     $('slideStepNo').textContent='';
     $('slideStage').innerHTML='<div class="empty-steps">この器械にはまだ分解手順が登録されていません。<br>整理棚から写真を追加できます。</div>';
+    $('slideCaption').classList.remove('show');
     $('slideNav').style.display='none';
     return;
   }
@@ -567,12 +600,23 @@ async function openSlides(name){
   await preloadImages(steps);
   renderSlide();
 }
+let captionHidden=false;
 function renderSlide(){
-  const steps=meta.classes[slideName].steps;
+  const c=meta.classes[slideName];const steps=c.steps;
   $('slideStepNo').textContent='Step '+(slideIdx+1)+' / '+steps.length;
   $('slideStage').innerHTML='<img src="'+(imgCache[steps[slideIdx]]||'')+'" alt="Step'+(slideIdx+1)+'">';
+  const txt=(c.stepTexts&&c.stepTexts[slideIdx])||'';
+  const cap=$('slideCaption');
+  if(txt && !captionHidden){cap.innerHTML=escapeHtml(txt)+'<span class="tap">写真をタップで説明を隠す</span>';cap.classList.add('show');}
+  else if(txt && captionHidden){cap.classList.remove('show');}
+  else{cap.classList.remove('show');}
   $('slidePrev').disabled=slideIdx===0;
   $('slideNext').textContent=slideIdx===steps.length-1?'おわり':'次 ›';
+}
+function toggleCaption(){
+  const c=meta.classes[slideName];const txt=(c&&c.stepTexts&&c.stepTexts[slideIdx])||'';
+  if(!txt)return;                       // 説明が無い写真ではトグルしない
+  captionHidden=!captionHidden;renderSlide();
 }
 function slideMove(d){
   const steps=meta.classes[slideName].steps;
@@ -663,7 +707,7 @@ async function loadStore(){
     let m=null,ds=null;
     try{m=await idbGet('kv','meta');ds=await idbGet('kv','dataset');}catch(e){}
     if(!m){ await migrateOld(); try{m=await idbGet('kv','meta');ds=await idbGet('kv','dataset');}catch(e){} }
-    if(m){meta=m;if(!meta.folders)meta.folders=[];if(!meta.classes)meta.classes={};Object.keys(meta.classes).forEach(n=>{if(!meta.classes[n].steps)meta.classes[n].steps=[];});}
+    if(m){meta=m;if(!meta.folders)meta.folders=[];if(!meta.classes)meta.classes={};Object.keys(meta.classes).forEach(n=>normalizeClass(n));}
     if(ds&&classifier){const d={};Object.keys(ds).forEach(k=>{d[k]=tf.tensor(ds[k].data,ds[k].shape);});if(Object.keys(d).length)classifier.setClassifierDataset(d);}
   }catch(e){console.warn('読み込み失敗',e);}
 }
@@ -693,32 +737,80 @@ async function migrateOld(){
   }catch(e){console.warn('引き継ぎ失敗',e);}
 }
 
-/* ---- 書き出し（全データを1ファイルに） ---- */
-async function exportAll(){
+/* ---- 書き出し（範囲を選ぶ） ---- */
+function openExportPanel(){
+  const counts=classifier?classifier.getClassExampleCount():{};
+  const names=Object.keys(counts);
+  if(names.length===0&&meta.folders.length===0){alert('書き出すデータがありません。');return;}
+  let html=`<label class="epitem"><input type="checkbox" id="ep_all" checked onchange="onExportAllToggle()"><b>全部（おすすめ）</b><span class="epc">${names.length}件</span></label>`;
+  html+=`<div class="ep-divider">― または、フォルダを選ぶ ―</div>`;
+  meta.folders.forEach(f=>{
+    const c=names.filter(n=>meta.classes[n].folder===f.id).length;
+    html+=`<label class="epitem"><input type="checkbox" class="ep_f" value="${f.id}" disabled onchange="onExportPick()"><span>${escapeHtml(f.name)}</span><span class="epc">${c}件</span></label>`;
+  });
+  const unfiled=names.filter(n=>!meta.classes[n].folder).length;
+  if(unfiled)html+=`<label class="epitem"><input type="checkbox" class="ep_f" value="__unfiled__" disabled onchange="onExportPick()"><span>未分類</span><span class="epc">${unfiled}件</span></label>`;
+  $('exportList').innerHTML=html;
+  $('exportPanel').style.display='block';
+}
+function closeExportPanel(){$('exportPanel').style.display='none';}
+function onExportAllToggle(){
+  const all=$('ep_all').checked;
+  document.querySelectorAll('.ep_f').forEach(c=>{c.disabled=all;if(all)c.checked=false;});
+}
+function onExportPick(){
+  const any=[...document.querySelectorAll('.ep_f')].some(c=>c.checked);
+  if(any)$('ep_all').checked=false;
+}
+async function exportSelected(){
+  const counts=classifier?classifier.getClassExampleCount():{};
+  const names=Object.keys(counts);
+  const all=$('ep_all').checked;
+  let payload;
+  if(all){
+    payload=await buildPayload(names,meta.folders.map(f=>f.id),true);
+    payload.scope='all';
+  }else{
+    const picked=[...document.querySelectorAll('.ep_f')].filter(c=>c.checked).map(c=>c.value);
+    if(picked.length===0){alert('フォルダを選ぶか、「全部」を選んでください。');return;}
+    const wantUnfiled=picked.includes('__unfiled__');
+    const folderIds=picked.filter(v=>v!=='__unfiled__');
+    const selNames=names.filter(n=>{const f=meta.classes[n].folder;return (f&&folderIds.includes(f))||(!f&&wantUnfiled);});
+    payload=await buildPayload(selNames,folderIds,wantUnfiled);
+    payload.scope='folders';
+  }
+  closeExportPanel();
+  downloadPayload(payload);
+}
+async function buildPayload(names,folderIds,includeUnfiled){
+  const classes={},dataset={},images={};
+  const d=classifier?classifier.getClassifierDataset():{};
+  for(const n of names){
+    const c=meta.classes[n];
+    classes[n]={folder:c.folder||null,steps:(c.steps||[]).slice(),stepTexts:(c.stepTexts||[]).slice()};
+    if(d[n])dataset[n]={data:Array.from(d[n].dataSync()),shape:d[n].shape};
+    for(const id of (c.steps||[])){if(!images[id]){try{const v=await idbGet('images',id);if(v)images[id]=v;}catch(e){}}}
+  }
+  const folders=meta.folders.filter(f=>folderIds.includes(f.id)).map(f=>({id:f.id,name:f.name}));
+  return {app:'kikai',version:3,exportedAt:new Date().toISOString(),meta:{folders,classes},dataset,images};
+}
+function downloadPayload(payload){
   try{
-    const names=Object.keys(meta.classes||{});
-    if(names.length===0&&meta.folders.length===0){alert('書き出すデータがありません。');return;}
-    const images={};
-    for(const n of names){for(const id of (meta.classes[n].steps||[])){if(!images[id]){try{const v=await idbGet('images',id);if(v)images[id]=v;}catch(e){}}}}
-    const dataset={};
-    if(classifier){const d=classifier.getClassifierDataset();Object.keys(d).forEach(k=>{dataset[k]={data:Array.from(d[k].dataSync()),shape:d[k].shape};});}
-    const payload={app:'kikai',version:3,exportedAt:new Date().toISOString(),meta,dataset,images};
     const json=JSON.stringify(payload);
-    const fname='kikai-backup-'+new Date().toISOString().slice(0,10)+'.json';
+    const tag=payload.scope==='all'?'all':'part';
+    const fname='kikai-'+tag+'-'+new Date().toISOString().slice(0,10)+'.json';
     const blob=new Blob([json],{type:'application/json'});
     const file=new File([blob],fname,{type:'application/json'});
-    // iOS：共有シート（ファイルに保存／AirDrop）が使えれば優先
     if(navigator.canShare&&navigator.canShare({files:[file]})){
-      try{await navigator.share({files:[file],title:fname});return;}catch(e){if(e&&e.name==='AbortError')return;}
+      navigator.share({files:[file],title:fname}).catch(e=>{if(!(e&&e.name==='AbortError'))fallbackDownload(blob,fname);});
+      return;
     }
-    // フォールバック：ダウンロード
-    const url=URL.createObjectURL(blob);
-    const a=document.createElement('a');a.href=url;a.download=fname;document.body.appendChild(a);a.click();a.remove();
-    setTimeout(()=>URL.revokeObjectURL(url),4000);
+    fallbackDownload(blob,fname);
   }catch(e){console.error(e);alert('書き出しに失敗しました。');}
 }
+function fallbackDownload(blob,fname){const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=fname;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),4000);}
 
-/* ---- 読み込み（全置き換え） ---- */
+/* ---- 読み込み（全置き換え／フォルダ差し替え） ---- */
 function onImportFile(ev){
   const file=ev.target.files&&ev.target.files[0];ev.target.value='';if(!file)return;
   const reader=new FileReader();
@@ -728,31 +820,83 @@ function onImportFile(ev){
     if(!payload||payload.app!=='kikai'||!payload.meta){alert('このアプリのバックアップファイルではないようです。');return;}
     const cls=payload.meta.classes?Object.keys(payload.meta.classes).length:0;
     const fol=payload.meta.folders?payload.meta.folders.length:0;
-    if(!confirm('今のデータ（フォルダ・器械・手順）はすべて置き換わります。\n読み込むと フォルダ'+fol+'件・器械'+cls+'件 がセットされます。\nよろしいですか？'))return;
-    await importReplace(payload);
+    if(payload.scope==='folders'){
+      if(!confirm('フォルダ '+fol+'件・器械'+cls+'件 を読み込みます。\n同じ名前のフォルダは中身を差し替え、他のフォルダはそのまま残します。\nよろしいですか？'))return;
+      await importPartial(payload);
+    }else{
+      if(!confirm('今のデータ（フォルダ・器械・手順）はすべて置き換わります。\n読み込むと フォルダ'+fol+'件・器械'+cls+'件 がセットされます。\nよろしいですか？'))return;
+      await importReplace(payload);
+    }
   };
   reader.onerror=()=>alert('ファイルを読み込めませんでした。');
   reader.readAsText(file);
+}
+async function removeClassFull(n){
+  const st=(meta.classes[n]&&meta.classes[n].steps)||[];
+  for(const id of st){await idbDel('images',id);delete imgCache[id];}
+  if(classifier){try{classifier.clearClass(n);}catch(e){}}
+  delete meta.classes[n];
 }
 async function importReplace(payload){
   try{
     await clearImages();imgCache={};
     if(payload.images){for(const id of Object.keys(payload.images)){try{await idbPut('images',id,payload.images[id]);}catch(e){}}}
     meta=payload.meta;if(!meta.folders)meta.folders=[];if(!meta.classes)meta.classes={};
-    Object.keys(meta.classes).forEach(n=>{if(!meta.classes[n].steps)meta.classes[n].steps=[];});
+    Object.keys(meta.classes).forEach(n=>normalizeClass(n));
     if(classifier){
       if(payload.dataset&&Object.keys(payload.dataset).length){
         const ds={};Object.keys(payload.dataset).forEach(k=>{ds[k]=tf.tensor(payload.dataset[k].data,payload.dataset[k].shape);});
         classifier.setClassifierDataset(ds);
       }else{classifier.clearAllClasses();}
     }
-    await saveMeta();
-    alert('読み込みました。');
-    renderLibrary();
+    await saveMeta();alert('読み込みました。');renderLibrary();
+  }catch(e){console.error(e);alert('読み込みに失敗しました。');}
+}
+async function importPartial(payload){
+  try{
+    const sub=payload.meta;const pidToName={};(sub.folders||[]).forEach(f=>pidToName[f.id]=f.name);
+    const nameToLocalId={};
+    // 同名フォルダは中身ごと差し替え／無ければ追加
+    for(const f of (sub.folders||[])){
+      const ex=meta.folders.find(x=>x.name===f.name);
+      if(ex){
+        const members=Object.keys(meta.classes).filter(n=>meta.classes[n].folder===ex.id);
+        for(const n of members){await removeClassFull(n);}
+        meta.folders=meta.folders.filter(x=>x.id!==ex.id);
+      }
+      const nid='f'+Date.now()+Math.random().toString(36).slice(2,5);
+      meta.folders.push({id:nid,name:f.name});nameToLocalId[f.name]=nid;
+    }
+    // 器械を入れる（既存同名は置き換え）
+    for(const n of Object.keys(sub.classes||{})){
+      const cls=sub.classes[n];
+      let folderLocal=null;
+      if(cls.folder!=null&&pidToName[cls.folder]!=null)folderLocal=nameToLocalId[pidToName[cls.folder]];
+      if(meta.classes[n])await removeClassFull(n);
+      if(payload.images){for(const id of (cls.steps||[])){if(payload.images[id]){try{await idbPut('images',id,payload.images[id]);}catch(e){}}}}
+      if(payload.dataset&&payload.dataset[n]&&classifier){
+        const cur=classifier.getClassifierDataset();
+        cur[n]=tf.tensor(payload.dataset[n].data,payload.dataset[n].shape);
+        classifier.setClassifierDataset(cur);
+      }
+      meta.classes[n]={folder:folderLocal,steps:(cls.steps||[]).slice(),stepTexts:(cls.stepTexts||[]).slice()};
+      normalizeClass(n);
+    }
+    await saveMeta();alert('読み込みました。');renderLibrary();
   }catch(e){console.error(e);alert('読み込みに失敗しました。');}
 }
 
 /* ---- 小物（入力の安全化：表示前にHTMLエスケープ） ---- */
+function normalizeClass(n){
+  const c=meta.classes[n]||{};
+  if(!c.steps)c.steps=[];
+  if(!c.stepTexts)c.stepTexts=[];
+  while(c.stepTexts.length<c.steps.length)c.stepTexts.push('');
+  if(c.stepTexts.length>c.steps.length)c.stepTexts.length=c.steps.length;
+  if(c.folder===undefined)c.folder=null;
+  meta.classes[n]=c;
+  return c;
+}
 function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function jsq(s){return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'");}
 document.addEventListener('visibilitychange',()=>{if(document.hidden){stopCapture(true);stopPredictLoop();}});
