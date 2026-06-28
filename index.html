@@ -3,630 +3,477 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
-<title>器械分解学習アプリ — STEP1（ボールペン判別）</title>
-
-<!-- ===== 端末内で完結する画像認識（外部API課金なし） =====
-     ライブラリは JS から動的に読み込む（CDNが片方塞がれても代替先を試す） -->
-
+<title>器械分解学習アプリ</title>
 <style>
 :root{
-  /* 手術室の世界に根ざした配色：スクラブのティール／ステンレス／クリニカルな白 */
-  --steel-900:#1b242b;   /* 文字・最濃 */
-  --steel-700:#3a4750;
-  --steel-500:#6b7882;
-  --steel-300:#aeb8bf;
-  --steel-100:#e4e8eb;   /* 罫・境界 */
-  --paper:#f6f8f9;       /* 背景 */
-  --panel:#ffffff;
-  --scrub:#0e7c7b;       /* アクセント＝外科スクラブのティール */
-  --scrub-dark:#0a5f5e;
-  --scrub-tint:#e3f0ef;
-  --amber:#b46710;       /* 注意（確信度不足） */
-  --amber-tint:#fbefe0;
-  --good:#0e7c7b;
-  --radius:14px;
-  --shadow:0 1px 2px rgba(27,36,43,.06), 0 8px 24px rgba(27,36,43,.06);
+  --steel-900:#1b242b; --steel-700:#3a4750; --steel-500:#6b7882;
+  --steel-300:#aeb8bf; --steel-100:#e4e8eb; --paper:#f6f8f9; --panel:#fff;
+  --scrub:#0e7c7b; --scrub-dark:#0a5f5e; --scrub-tint:#e3f0ef;
+  --amber:#b46710; --amber-tint:#fbefe0; --good:#0e7c7b; --bad:#b3261e;
+  --radius:14px; --shadow:0 1px 2px rgba(27,36,43,.06),0 8px 24px rgba(27,36,43,.06);
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;height:100%}
-body{
-  background:var(--paper);
-  color:var(--steel-900);
+body{background:var(--paper);color:var(--steel-900);
   font-family:"Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP",system-ui,-apple-system,sans-serif;
-  -webkit-font-smoothing:antialiased;
-  line-height:1.5;
-  padding-bottom:env(safe-area-inset-bottom);
-}
-.tnum{font-variant-numeric:tabular-nums;font-feature-settings:"tnum"}
-
-/* ===== 画面共通 ===== */
+  -webkit-font-smoothing:antialiased;line-height:1.5;padding-bottom:env(safe-area-inset-bottom)}
+.tnum{font-variant-numeric:tabular-nums}
 .app{max-width:560px;margin:0 auto;min-height:100%;display:flex;flex-direction:column}
-.screen{display:none;flex:1;flex-direction:column;padding:18px 16px 24px}
+.screen{display:none;flex:1;flex-direction:column;padding:16px 16px 28px}
 .screen.active{display:flex;animation:fade .2s ease}
 @keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+header.bar{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--steel-100);background:var(--panel)}
+.brand{font-weight:700;font-size:15px}
+.tag{margin-left:auto;font-size:11px;font-weight:700;color:var(--steel-500);border:1px solid var(--steel-100);border-radius:999px;padding:3px 9px}
+.back{appearance:none;border:none;background:none;color:var(--scrub);font-size:15px;font-weight:600;padding:6px 2px;margin-bottom:6px;cursor:pointer;width:max-content}
 
-header.bar{
-  display:flex;align-items:center;gap:10px;
-  padding:14px 16px;border-bottom:1px solid var(--steel-100);background:var(--panel);
-}
-.brand{font-weight:700;font-size:15px;letter-spacing:.02em}
-.tag{
-  margin-left:auto;font-size:11px;font-weight:700;letter-spacing:.04em;
-  color:var(--steel-500);border:1px solid var(--steel-100);border-radius:999px;
-  padding:3px 9px;white-space:nowrap;
-}
-
-.back{
-  appearance:none;border:none;background:none;color:var(--scrub);
-  font-size:15px;font-weight:600;padding:6px 2px;margin-bottom:6px;cursor:pointer;
-  display:inline-flex;align-items:center;gap:4px;width:max-content;
-}
-
-/* ===== トップ ===== */
-.hero{padding:30px 4px 8px}
-.hero .eyebrow{font-size:12px;font-weight:700;letter-spacing:.14em;color:var(--scrub);text-transform:uppercase}
-.hero h1{font-size:25px;font-weight:700;margin:.4em 0 .25em;line-height:1.3}
-.hero p{color:var(--steel-500);font-size:14px;margin:0;max-width:34em}
-.menu{display:grid;gap:14px;margin-top:26px}
-.tile{
-  appearance:none;text-align:left;border:1px solid var(--steel-100);background:var(--panel);
-  border-radius:var(--radius);padding:20px 18px;cursor:pointer;box-shadow:var(--shadow);
-  display:flex;align-items:center;gap:16px;transition:transform .08s ease, border-color .15s;
-}
+/* home */
+.hero{padding:26px 4px 8px}
+.hero .eyebrow{font-size:12px;font-weight:700;letter-spacing:.14em;color:var(--scrub)}
+.hero h1{font-size:24px;font-weight:700;margin:.4em 0 .25em;line-height:1.3}
+.hero p{color:var(--steel-500);font-size:14px;margin:0}
+.menu{display:grid;gap:13px;margin-top:24px}
+.tile{appearance:none;text-align:left;border:1px solid var(--steel-100);background:var(--panel);border-radius:var(--radius);padding:18px;cursor:pointer;box-shadow:var(--shadow);display:flex;align-items:center;gap:15px}
 .tile:active{transform:scale(.99)}
-.tile .ico{
-  width:48px;height:48px;border-radius:12px;flex:none;display:grid;place-items:center;
-  background:var(--scrub-tint);color:var(--scrub-dark);
-}
-.tile .ico svg{width:26px;height:26px}
-.tile h2{margin:0;font-size:18px}
+.tile .ico{width:46px;height:46px;border-radius:12px;flex:none;display:grid;place-items:center;background:var(--scrub-tint);color:var(--scrub-dark)}
+.tile .ico svg{width:25px;height:25px}
+.tile h2{margin:0;font-size:17px}
 .tile small{color:var(--steel-500);font-size:13px}
-.tile .chev{margin-left:auto;color:var(--steel-300)}
-
-.notice{
-  margin-top:22px;font-size:12px;color:var(--steel-500);
-  background:var(--panel);border:1px dashed var(--steel-300);border-radius:12px;padding:12px 14px;
-}
+.tile .chev{margin-left:auto;color:var(--steel-300);font-size:20px}
+.notice{margin-top:20px;font-size:12px;color:var(--steel-500);background:var(--panel);border:1px dashed var(--steel-300);border-radius:12px;padding:12px 14px}
 .notice b{color:var(--steel-700)}
+.foot-note{margin-top:auto;padding-top:16px;font-size:11px;color:var(--steel-300);text-align:center}
 
-/* ===== カメラ枠 ===== */
-.viewport{
-  position:relative;width:100%;aspect-ratio:3/4;background:#0d1316;border-radius:var(--radius);
-  overflow:hidden;box-shadow:var(--shadow);margin-bottom:14px;
-}
+/* camera */
+.viewport{position:relative;width:100%;aspect-ratio:3/4;background:#0d1316;border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);margin-bottom:14px}
 video{width:100%;height:100%;object-fit:cover;display:block;background:#0d1316}
 .reticle{position:absolute;inset:14px;border:2px solid rgba(255,255,255,.5);border-radius:10px;pointer-events:none}
 .reticle::before,.reticle::after{content:"";position:absolute;width:20px;height:20px;border:3px solid #fff}
 .reticle::before{top:-2px;left:-2px;border-right:0;border-bottom:0;border-top-left-radius:8px}
 .reticle::after{bottom:-2px;right:-2px;border-left:0;border-top:0;border-bottom-right-radius:8px}
-.cam-msg{
-  position:absolute;inset:0;display:none;place-items:center;text-align:center;color:#fff;
-  background:rgba(13,19,22,.86);padding:24px;font-size:14px;line-height:1.7;
-}
+.cam-msg{position:absolute;inset:0;display:none;place-items:center;text-align:center;color:#fff;background:rgba(13,19,22,.86);padding:24px;font-size:14px;line-height:1.7}
 .cam-msg.show{display:grid}
-.spin{width:30px;height:30px;border:3px solid rgba(255,255,255,.25);border-top-color:#fff;border-radius:50%;
-  margin:0 auto 12px;animation:spin 1s linear infinite}
+.spin{width:30px;height:30px;border:3px solid rgba(255,255,255,.25);border-top-color:#fff;border-radius:50%;margin:0 auto 12px;animation:spin 1s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
-
-.capbadge{
-  position:absolute;top:12px;left:12px;display:none;align-items:center;gap:7px;
-  background:rgba(13,19,22,.72);color:#fff;border-radius:999px;padding:6px 12px;font-size:13px;font-weight:600;
-}
+.capbadge{position:absolute;top:12px;left:12px;display:none;align-items:center;gap:7px;background:rgba(13,19,22,.72);color:#fff;border-radius:999px;padding:6px 12px;font-size:13px;font-weight:600}
 .capbadge.show{display:flex}
 .capbadge .dot{width:9px;height:9px;border-radius:50%;background:#ff5a5a;animation:pulse 1s infinite}
 @keyframes pulse{50%{opacity:.3}}
+.frozen-badge{position:absolute;top:12px;left:12px;display:none;align-items:center;gap:6px;background:rgba(14,124,123,.9);color:#fff;border-radius:999px;padding:6px 12px;font-size:13px;font-weight:700}
+.frozen-badge.show{display:flex}
 
-/* ===== 学習画面 ===== */
-.field{margin:4px 0 14px}
+/* form */
+.field{margin:2px 0 12px}
 .field label{display:block;font-size:13px;font-weight:600;color:var(--steel-700);margin-bottom:6px}
-.field input{
-  width:100%;font-size:16px;padding:13px 14px;border:1px solid var(--steel-300);border-radius:11px;
-  background:var(--panel);color:var(--steel-900);
-}
-.field input:focus{outline:none;border-color:var(--scrub);box-shadow:0 0 0 3px var(--scrub-tint)}
-
-.btn{
-  appearance:none;border:none;border-radius:12px;font-size:16px;font-weight:700;
-  padding:15px 18px;cursor:pointer;width:100%;transition:transform .08s, background .15s, opacity .15s;
-}
+.field input,.field select{width:100%;font-size:16px;padding:12px 13px;border:1px solid var(--steel-300);border-radius:11px;background:var(--panel);color:var(--steel-900)}
+.field input:focus,.field select:focus{outline:none;border-color:var(--scrub);box-shadow:0 0 0 3px var(--scrub-tint)}
+.row2{display:flex;gap:10px}
+.row2 .field{flex:1}
+.btn{appearance:none;border:none;border-radius:12px;font-size:16px;font-weight:700;padding:14px 18px;cursor:pointer;width:100%}
 .btn:active{transform:scale(.99)}
-.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn:disabled{opacity:.45}
 .btn-primary{background:var(--scrub);color:#fff}
-.btn-primary:active{background:var(--scrub-dark)}
-.btn-stop{background:#b3261e;color:#fff}
+.btn-stop{background:var(--bad);color:#fff}
 .btn-ghost{background:var(--panel);color:var(--scrub);border:1px solid var(--steel-100)}
-
+.btn-sm{font-size:14px;padding:10px 14px;width:auto}
 .hint{font-size:13px;color:var(--steel-500);margin:10px 2px 0;text-align:center}
+.linkrow{margin-top:14px;text-align:center}
+.linkrow button{appearance:none;border:none;background:none;color:var(--scrub);font-weight:600;font-size:14px;cursor:pointer}
 
-/* 登録済み一覧 */
-.classlist{margin-top:20px}
-.classlist h3{font-size:13px;letter-spacing:.04em;color:var(--steel-500);font-weight:700;margin:0 2px 8px}
-.crow{
-  display:flex;align-items:center;gap:12px;background:var(--panel);border:1px solid var(--steel-100);
-  border-radius:11px;padding:11px 13px;margin-bottom:8px;
-}
+/* library / class rows */
+.sec-title{font-size:13px;letter-spacing:.04em;color:var(--steel-500);font-weight:700;margin:18px 2px 8px;display:flex;align-items:center}
+.sec-title .add{margin-left:auto}
+.folder{border:1px solid var(--steel-100);border-radius:12px;background:var(--panel);margin-bottom:12px;overflow:hidden}
+.folder-head{display:flex;align-items:center;gap:9px;padding:11px 13px;background:#fbfcfc;border-bottom:1px solid var(--steel-100)}
+.folder-head .fname{font-weight:700;font-size:14px}
+.folder-head .fcount{font-size:12px;color:var(--steel-500)}
+.folder-head .fact{margin-left:auto;display:flex;gap:6px}
+.icobtn{appearance:none;border:none;background:none;color:var(--steel-300);font-size:18px;cursor:pointer;padding:2px 4px}
+.icobtn:active{color:var(--scrub)}
+.icobtn.del:active{color:var(--bad)}
+.crow{display:flex;align-items:center;gap:11px;padding:11px 13px;border-top:1px solid var(--steel-100)}
+.crow:first-child{border-top:none}
 .crow .nm{font-weight:600}
-.crow .ct{margin-left:auto;font-size:12px;color:var(--steel-500);background:var(--paper);
-  border:1px solid var(--steel-100);border-radius:999px;padding:3px 9px}
-.crow .del{appearance:none;border:none;background:none;color:var(--steel-300);font-size:20px;cursor:pointer;padding:0 2px}
-.crow .del:active{color:#b3261e}
-.empty{color:var(--steel-500);font-size:13px;text-align:center;padding:14px;border:1px dashed var(--steel-300);border-radius:11px}
+.crow .ct{font-size:12px;color:var(--steel-500);background:var(--paper);border:1px solid var(--steel-100);border-radius:999px;padding:2px 8px}
+.crow .act{margin-left:auto;display:flex;gap:4px;align-items:center}
+.crow select{font-size:12px;padding:5px 6px;border:1px solid var(--steel-100);border-radius:8px;background:var(--panel);max-width:120px}
+.empty{color:var(--steel-500);font-size:13px;text-align:center;padding:16px;border:1px dashed var(--steel-300);border-radius:11px;margin-top:8px}
 
-/* ===== 判別画面：確信度リードアウト（このアプリの“顔”） ===== */
-.readout{background:var(--panel);border:1px solid var(--steel-100);border-radius:var(--radius);
-  padding:18px;box-shadow:var(--shadow)}
-.verdict-label{font-size:12px;font-weight:700;letter-spacing:.1em;color:var(--steel-500);text-transform:uppercase}
-.verdict{font-size:30px;font-weight:700;margin:2px 0 4px;line-height:1.2;min-height:1.2em}
-.verdict.waiting{color:var(--amber);font-size:21px}
-.verdict.idle{color:var(--steel-300);font-size:21px}
-.confwrap{margin-top:12px}
-.confhead{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:6px}
-.confhead .lbl{font-size:12px;color:var(--steel-500);font-weight:600}
-.confhead .pct{font-size:22px;font-weight:700}
-.bar{height:12px;border-radius:999px;background:var(--steel-100);overflow:hidden;position:relative}
-.bar .fill{height:100%;width:0%;background:var(--good);border-radius:999px;transition:width .15s ease, background .2s}
-.thresh{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--steel-700);opacity:.55}
-.thresh-cap{font-size:11px;color:var(--steel-500);margin-top:5px}
-
-/* 全クラスの内訳 */
-.breakdown{margin-top:16px;display:grid;gap:9px}
-.brow .bk-top{display:flex;justify-content:space-between;font-size:13px;margin-bottom:3px}
-.brow .bk-nm{color:var(--steel-700);font-weight:600}
-.brow .bk-pct{color:var(--steel-500)}
-.brow .mini{height:6px;border-radius:999px;background:var(--steel-100);overflow:hidden}
-.brow .mini i{display:block;height:100%;background:var(--scrub);width:0%;transition:width .15s}
-
-.threshctrl{margin-top:18px;display:flex;align-items:center;gap:12px;font-size:13px;color:var(--steel-700)}
+/* predict result */
+.readout{background:var(--panel);border:1px solid var(--steel-100);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow)}
+.verdict-label{font-size:12px;font-weight:700;letter-spacing:.1em;color:var(--steel-500)}
+.verdict{font-size:26px;font-weight:700;margin:3px 0 2px;line-height:1.25;min-height:1.2em}
+.verdict.idle{color:var(--steel-300);font-size:19px}
+.verdict.waiting{color:var(--amber);font-size:19px}
+.ranks{margin-top:14px;display:grid;gap:10px}
+.rank{display:flex;align-items:center;gap:11px}
+.rank .no{width:26px;height:26px;border-radius:7px;flex:none;display:grid;place-items:center;font-weight:700;font-size:13px;background:var(--steel-100);color:var(--steel-700)}
+.rank.first .no{background:var(--scrub);color:#fff}
+.rank .body{flex:1;min-width:0}
+.rank .top{display:flex;justify-content:space-between;font-size:14px;margin-bottom:4px}
+.rank .rname{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rank .rpct{font-weight:700;color:var(--steel-700)}
+.rank .bar{height:8px;border-radius:999px;background:var(--steel-100);overflow:hidden}
+.rank .bar i{display:block;height:100%;background:var(--scrub);width:0%}
+.rank.first .bar i{background:var(--scrub)}
+.predict-actions{margin-top:16px;display:flex;gap:10px}
+.threshctrl{margin-top:16px;display:flex;align-items:center;gap:12px;font-size:13px;color:var(--steel-700)}
 .threshctrl input[type=range]{flex:1;accent-color:var(--scrub)}
-
-.foot-note{margin-top:auto;padding-top:18px;font-size:11px;color:var(--steel-300);text-align:center}
 </style>
 </head>
 <body>
 <div class="app">
-  <header class="bar">
-    <span class="brand">器械分解学習アプリ</span>
-    <span class="tag">STEP 1 ・ 検証用</span>
-  </header>
+  <header class="bar"><span class="brand">器械分解学習アプリ</span><span class="tag" id="topTag">検証用</span></header>
 
-  <!-- ============ トップ画面 ============ -->
+  <!-- HOME -->
   <section id="home" class="screen active">
     <div class="hero">
       <div class="eyebrow">かざせば、判る</div>
       <h1>器械を写すと<br>「これは何か」を判別します</h1>
-      <p>まずは検証として、2種類のボールペンを覚えさせ、見分けられるか確かめます。学習も判別も、すべてこの端末の中だけで動きます。</p>
+      <p>覚えさせる・見分ける・整理する。すべてこの端末の中だけで動きます。</p>
     </div>
-
     <div class="menu">
       <button class="tile" onclick="goLearn()">
-        <span class="ico" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
-        </span>
-        <span>
-          <h2>学習</h2><br>
-          <small>器械に名前をつけて覚えさせる</small>
-        </span>
-        <span class="chev">›</span>
+        <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></span>
+        <span><h2>学習</h2><small>器械に名前をつけて覚えさせる</small></span><span class="chev">›</span>
       </button>
-
       <button class="tile" onclick="goPredict()">
-        <span class="ico" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-        </span>
-        <span>
-          <h2>判別</h2><br>
-          <small>かざして「これは○○です」と表示</small>
-        </span>
-        <span class="chev">›</span>
+        <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg></span>
+        <span><h2>判別</h2><small>かざして候補を表示</small></span><span class="chev">›</span>
+      </button>
+      <button class="tile" onclick="goLibrary()">
+        <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/></svg></span>
+        <span><h2>整理棚</h2><small>覚えた器械をフォルダで整理・改名・削除</small></span><span class="chev">›</span>
       </button>
     </div>
-
-    <div class="notice">
-      <b>学習用ツールです（医療機器ではありません）。</b><br>
-      器械の良し悪しや、分解の安全性は判定しません。識別と表示のみを行います。写真データは外部に送られません。
-    </div>
+    <div class="notice"><b>学習用ツールです（医療機器ではありません）。</b><br>識別と表示のみを行います。写真は保存されず、データは端末内だけに保持されます。</div>
     <div class="foot-note">端末内で完結 ・ 通信は初回のAI読み込みのみ</div>
   </section>
 
-  <!-- ============ 学習画面 ============ -->
+  <!-- LEARN -->
   <section id="learn" class="screen">
     <button class="back" onclick="goHome()">‹ もどる</button>
-
-    <div class="field">
-      <label for="nameInput">この器械の名前</label>
-      <input id="nameInput" type="text" placeholder="例：青ボールペン" autocomplete="off">
+    <div class="row2">
+      <div class="field"><label for="nameInput">器械の名前</label><input id="nameInput" type="text" placeholder="例：青ボールペン" autocomplete="off"></div>
+      <div class="field" style="flex:0 0 42%"><label for="folderSelect">フォルダ</label><select id="folderSelect"></select></div>
     </div>
-
     <div class="viewport">
       <video id="learnVideo" autoplay playsinline muted></video>
       <div class="reticle"></div>
       <div class="capbadge" id="capBadge"><span class="dot"></span><span id="capCount">撮影中 0枚</span></div>
       <div class="cam-msg" id="learnMsg"><div><div class="spin"></div><span id="learnMsgText">AIモデルを読み込み中…</span></div></div>
     </div>
-
     <button class="btn btn-primary" id="captureBtn" onclick="toggleCapture()" disabled>撮影して覚えさせる</button>
-    <p class="hint" id="learnHint">名前を入れて、器械を枠に映してから押してください。<br>押している間、ペンを<b>ゆっくり回して</b>多角度を撮ります。</p>
-
-    <div class="classlist">
-      <h3>登録済みの器械</h3>
-      <div id="classList"></div>
-    </div>
-    <div class="foot-note">学習データはこの端末内に保持されます</div>
+    <p class="hint" id="learnHint">名前を入れ、器械を枠に映してから押す。押している間、<b>ゆっくり回して</b>多角度を撮ります。納得いくまで撮ってOK。</p>
+    <div class="linkrow"><button onclick="goLibrary()">整理棚をひらく →</button></div>
   </section>
 
-  <!-- ============ 判別画面 ============ -->
+  <!-- LIBRARY -->
+  <section id="library" class="screen">
+    <button class="back" onclick="goHome()">‹ もどる</button>
+    <div class="sec-title">フォルダと器械<button class="btn btn-ghost btn-sm add" onclick="newFolder()">＋ フォルダ</button></div>
+    <div id="libBody"></div>
+    <div class="foot-note">名前や枚数はこの端末内にだけ保存されています</div>
+  </section>
+
+  <!-- PREDICT -->
   <section id="predict" class="screen">
     <button class="back" onclick="goHome()">‹ もどる</button>
-
     <div class="viewport">
       <video id="predictVideo" autoplay playsinline muted></video>
       <div class="reticle"></div>
+      <div class="capbadge" id="predBadge"><span class="dot"></span>判別中…</div>
+      <div class="frozen-badge" id="frozenBadge">✓ 判定しました</div>
       <div class="cam-msg" id="predictMsg"><div><div class="spin"></div><span id="predictMsgText">準備中…</span></div></div>
     </div>
-
     <div class="readout">
       <div class="verdict-label">判定</div>
       <div class="verdict idle" id="verdict">器械を枠に映してください</div>
-
-      <div class="confwrap">
-        <div class="confhead">
-          <span class="lbl">いちばん近い候補の確信度</span>
-          <span class="pct tnum" id="topPct">—</span>
-        </div>
-        <div class="bar">
-          <div class="fill" id="topFill"></div>
-          <div class="thresh" id="threshMark" style="left:80%"></div>
-        </div>
-        <div class="thresh-cap" id="threshCap">この線（80%）を超えると「確定」</div>
+      <div class="ranks" id="ranks"></div>
+      <div class="predict-actions" id="predictActions" style="display:none">
+        <button class="btn btn-primary" onclick="restartPredict()">もう一度判別する</button>
       </div>
-
-      <div class="breakdown" id="breakdown"></div>
-
       <div class="threshctrl">
         <span>確定ライン</span>
         <input id="threshRange" type="range" min="50" max="95" step="5" value="80" oninput="onThresh(this.value)">
         <span class="tnum" id="threshVal">80%</span>
       </div>
     </div>
-
-    <div class="foot-note" id="predictFoot">学習用ツール ・ 医療機器ではありません</div>
   </section>
 </div>
 
 <script>
-/* ============================================================
-   器械分解学習アプリ STEP1
-   構成：MobileNet（特徴抽出）＋ KNN分類器（少数データで判別）
-   すべてブラウザ内で完結。外部APIなし。
-   ============================================================ */
+/* ============ 器械分解学習アプリ ============
+   MobileNet（特徴抽出）＋ KNN（判別）。端末内で完結。 */
+const STORE_KEY='kikai_v2';
+let featureModel=null, classifier=null, stream=null;
+let capturing=false, captureTimer=null;
+let predictRAF=null, predictBusy=false, lastT=0, threshold=0.80;
+let stableName=null, stableCount=0, frozen=false;
+/* meta: フォルダと、各器械の所属フォルダ */
+let meta={ folders:[], classes:{} };  // classes[name] = {folder: folderId|null}
+const $=id=>document.getElementById(id);
 
-const STORE_KEY = 'kikai_step1_knn_v1';
-
-let featureModel = null;    // 特徴抽出モデル（MobileNet）
-let classifier = null;      // KNN分類器
-let stream = null;          // カメラ映像
-let mode = null;            // 'learn' | 'predict' | null
-let capturing = false;      // 撮影中フラグ
-let captureTimer = null;
-let predictRAF = null;
-let predictBusy = false;
-let lastPredictTime = 0;
-let threshold = 0.80;
-
-const $ = id => document.getElementById(id);
-
-/* -------- スクリプトを順に試して読み込む（CDN代替） -------- */
-function loadScript(urls){
-  return new Promise((resolve,reject)=>{
-    let i=0;
-    const tryNext=()=>{
-      if(i>=urls.length){ reject(new Error('cdn')); return; }
-      const s=document.createElement('script');
-      s.src=urls[i++];
-      s.onload=()=>resolve();
-      s.onerror=()=>{ s.remove(); tryNext(); };
-      document.head.appendChild(s);
-    };
-    tryNext();
-  });
-}
-
-/* -------- モデル読み込み（初回のみ。以降は端末内処理） -------- */
-async function ensureModel(msgEl, textEl){
-  if(featureModel && classifier) return true;
-  if(msgEl){ msgEl.classList.add('show'); }
-
-  // 1) ライブラリ本体（jsdelivr → unpkg の順で試す）
+/* ---- スクリプト読み込み（CDN代替つき） ---- */
+function loadScript(urls){return new Promise((res,rej)=>{let i=0;const t=()=>{if(i>=urls.length){rej(new Error('cdn'));return;}const s=document.createElement('script');s.src=urls[i++];s.onload=()=>res();s.onerror=()=>{s.remove();t();};document.head.appendChild(s);};t();});}
+async function ensureModel(msgEl,textEl){
+  if(featureModel&&classifier)return true;
+  if(msgEl)msgEl.classList.add('show');
   try{
-    if(textEl) textEl.textContent = '部品を読み込み中…（初回のみ）';
-    if(typeof tf === 'undefined'){
-      await loadScript([
-        'https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js',
-        'https://unpkg.com/@tensorflow/tfjs@4.22.0/dist/tf.min.js'
-      ]);
-    }
-    if(typeof window.mobilenet === 'undefined'){
-      await loadScript([
-        'https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.1/dist/mobilenet.min.js',
-        'https://unpkg.com/@tensorflow-models/mobilenet@2.1.1/dist/mobilenet.min.js'
-      ]);
-    }
-    if(typeof window.knnClassifier === 'undefined'){
-      await loadScript([
-        'https://cdn.jsdelivr.net/npm/@tensorflow-models/knn-classifier@1.2.6/dist/knn-classifier.min.js',
-        'https://unpkg.com/@tensorflow-models/knn-classifier@1.2.6/dist/knn-classifier.min.js'
-      ]);
-    }
-  }catch(e){
-    console.error('library load failed', e);
-    if(textEl) textEl.innerHTML = '部品（ライブラリ）を取得できませんでした。<br>通信環境を確認してください。';
-    return false;
-  }
-
-  // 2) AIモデル本体（重みデータ）を取得
+    if(textEl)textEl.textContent='部品を読み込み中…（初回のみ）';
+    if(typeof tf==='undefined')await loadScript(['https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js','https://unpkg.com/@tensorflow/tfjs@4.22.0/dist/tf.min.js']);
+    if(typeof window.mobilenet==='undefined')await loadScript(['https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.1/dist/mobilenet.min.js','https://unpkg.com/@tensorflow-models/mobilenet@2.1.1/dist/mobilenet.min.js']);
+    if(typeof window.knnClassifier==='undefined')await loadScript(['https://cdn.jsdelivr.net/npm/@tensorflow-models/knn-classifier@1.2.6/dist/knn-classifier.min.js','https://unpkg.com/@tensorflow-models/knn-classifier@1.2.6/dist/knn-classifier.min.js']);
+  }catch(e){console.error(e);if(textEl)textEl.innerHTML='部品を取得できませんでした。<br>通信環境を確認してください。';return false;}
   try{
-    if(!classifier) classifier = knnClassifier.create();
+    if(!classifier)classifier=knnClassifier.create();
     if(!featureModel){
-      if(textEl) textEl.textContent = 'AIモデルを読み込み中…（初回のみ）';
-      try{
-        featureModel = await window.mobilenet.load({version:2, alpha:1.0});
-      }catch(inner){
-        // v2が取れない場合は v1 を試す
-        console.warn('mobilenet v2 failed, retry v1', inner);
-        featureModel = await window.mobilenet.load({version:1, alpha:1.0});
-      }
+      if(textEl)textEl.textContent='AIモデルを読み込み中…（初回のみ）';
+      try{featureModel=await window.mobilenet.load({version:2,alpha:1.0});}
+      catch(inner){console.warn('v2 fail, try v1',inner);featureModel=await window.mobilenet.load({version:1,alpha:1.0});}
     }
-    loadFromStorage();
+    loadStore();
     return true;
-  }catch(e){
-    console.error('model load failed', e);
-    if(textEl){
-      textEl.innerHTML =
-        'AIモデル本体を取得できませんでした。<br>' +
-        '<b>ファイルを直接 / アプリ内ブラウザで開いている</b>と起きます。<br>' +
-        'https のURLにして、本物の Safari で開いてください。';
-    }
-    return false;
-  }
+  }catch(e){console.error(e);if(textEl)textEl.innerHTML='AIモデル本体を取得できませんでした。<br>https のURLを、本物の Safari で開いてください。';return false;}
 }
 
-/* -------- カメラ -------- */
-async function startCamera(videoEl, msgEl, textEl){
+/* ---- カメラ ---- */
+async function startCamera(v,msgEl,textEl){
   stopCamera();
-  if(msgEl){ msgEl.classList.add('show'); }
-  if(textEl) textEl.textContent = 'カメラを起動中…';
+  if(msgEl)msgEl.classList.add('show');
+  if(textEl)textEl.textContent='カメラを起動中…';
   try{
-    stream = await navigator.mediaDevices.getUserMedia({
-      video:{ facingMode:{ ideal:'environment' }, width:{ideal:1280}, height:{ideal:960} },
-      audio:false
-    });
-    videoEl.srcObject = stream;
-    await videoEl.play().catch(()=>{});
-    if(msgEl) msgEl.classList.remove('show');
-    return true;
-  }catch(e){
-    if(textEl){
-      textEl.innerHTML = 'カメラを使えませんでした。<br>ブラウザのカメラ許可を確認してください。<br><small>※ファイル直開きで出る場合は、URL（https）として開くと安定します。</small>';
-    }
-    console.error(e);
-    return false;
-  }
+    stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:960}},audio:false});
+    v.srcObject=stream;await v.play().catch(()=>{});
+    if(msgEl)msgEl.classList.remove('show');return true;
+  }catch(e){console.error(e);if(textEl)textEl.innerHTML='カメラを使えませんでした。<br>カメラ許可と、Safariで開いているかを確認してください。';return false;}
 }
-function stopCamera(){
-  if(stream){ stream.getTracks().forEach(t=>t.stop()); stream=null; }
-}
+function stopCamera(){if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;}}
 
-/* -------- 画面遷移 -------- */
-function showScreen(id){
-  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
-  $(id).classList.add('active');
-}
-function goHome(){
-  stopCapture(); stopPredictLoop(); stopCamera(); mode=null;
-  showScreen('home');
-}
+/* ---- 画面遷移 ---- */
+function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));$(id).classList.add('active');}
+function goHome(){stopCapture();stopPredictLoop();stopCamera();showScreen('home');}
 async function goLearn(){
-  mode='learn'; showScreen('learn');
-  renderClassList();
-  const ok = await ensureModel($('learnMsg'), $('learnMsgText'));
-  if(!ok) return;
+  showScreen('learn');renderFolderSelect();
+  const ok=await ensureModel($('learnMsg'),$('learnMsgText'));if(!ok)return;
   $('learnMsg').classList.remove('show');
-  const camOk = await startCamera($('learnVideo'), $('learnMsg'), $('learnMsgText'));
-  $('captureBtn').disabled = !camOk;
-  renderClassList();
+  const cam=await startCamera($('learnVideo'),$('learnMsg'),$('learnMsgText'));
+  $('captureBtn').disabled=!cam;
+}
+async function goLibrary(){
+  showScreen('library');stopCamera();
+  const ok=await ensureModel(null,null); // モデル無しでも一覧は出したいが、KNNデータは必要
+  renderLibrary();
 }
 async function goPredict(){
-  mode='predict'; showScreen('predict');
-  const ok = await ensureModel($('predictMsg'), $('predictMsgText'));
-  if(!ok) return;
-  // 学習が無いときの案内
-  if(!classifier || classifier.getNumClasses() < 2){
+  showScreen('predict');resetPredictUI();
+  const ok=await ensureModel($('predictMsg'),$('predictMsgText'));if(!ok)return;
+  if(!classifier||classifier.getNumClasses()<2){
     $('predictMsg').classList.add('show');
-    $('predictMsgText').innerHTML = 'まだ学習が足りません。<br>「学習」で2種類以上を覚えさせてください。';
-    return;
+    $('predictMsgText').innerHTML='まだ学習が足りません。<br>「学習」で2種類以上を覚えさせてください。';return;
   }
   $('predictMsg').classList.remove('show');
-  const camOk = await startCamera($('predictVideo'), $('predictMsg'), $('predictMsgText'));
-  if(camOk) startPredictLoop();
+  const cam=await startCamera($('predictVideo'),$('predictMsg'),$('predictMsgText'));
+  if(cam)startPredictLoop();
 }
 
-/* -------- 学習：押している間、連続で多角度を撮る -------- */
-function toggleCapture(){
-  if(capturing) stopCapture(); else startCapture();
-}
+/* ---- 学習：押している間ずっと撮る（上限なし） ---- */
+function toggleCapture(){capturing?stopCapture():startCapture();}
 function startCapture(){
-  const name = $('nameInput').value.trim();
-  if(!name){ flashHint('先に名前を入れてください'); $('nameInput').focus(); return; }
-  if(!featureModel){ return; }
-  capturing = true;
-  let count = 0;
-  $('captureBtn').textContent = '撮影をとめる';
-  $('captureBtn').classList.remove('btn-primary'); $('captureBtn').classList.add('btn-stop');
-  $('capBadge').classList.add('show');
-  $('capCount').textContent = '撮影中 0枚';
-
-  const video = $('learnVideo');
-  captureTimer = setInterval(()=>{
-    if(!video.videoWidth) return;
-    tf.tidy(()=>{
-      const act = featureModel.infer(video, true);
-      classifier.addExample(act, name);
-    });
-    count++;
-    $('capCount').textContent = '撮影中 ' + count + '枚';
-    // 撮りすぎ防止：1回で最大120枚
-    if(count >= 120) stopCapture();
-  }, 110);
+  const name=$('nameInput').value.trim();
+  if(!name){flashHint('先に名前を入れてください');$('nameInput').focus();return;}
+  if(!featureModel)return;
+  // フォルダ所属を記録（既存なら維持、新規なら現在の選択を反映）
+  const folder=$('folderSelect').value||null;
+  if(!meta.classes[name])meta.classes[name]={folder};
+  else meta.classes[name].folder=folder;
+  capturing=true;let count=classifier.getClassExampleCount()[name]||0;const base=count;
+  $('captureBtn').textContent='撮影をとめる';$('captureBtn').classList.replace('btn-primary','btn-stop');
+  $('capBadge').classList.add('show');$('capCount').textContent='合計 '+count+'枚';
+  const v=$('learnVideo');
+  captureTimer=setInterval(()=>{
+    if(!v.videoWidth)return;
+    tf.tidy(()=>{const a=featureModel.infer(v,true);classifier.addExample(a,name);});
+    count++;$('capCount').textContent='合計 '+count+'枚（今回+'+(count-base)+'）';
+  },110);
 }
 function stopCapture(){
-  if(!capturing) return;
-  capturing = false;
-  clearInterval(captureTimer); captureTimer=null;
-  $('captureBtn').textContent = '撮影して覚えさせる';
-  $('captureBtn').classList.add('btn-primary'); $('captureBtn').classList.remove('btn-stop');
+  if(!capturing)return;capturing=false;clearInterval(captureTimer);captureTimer=null;
+  $('captureBtn').textContent='撮影して覚えさせる';$('captureBtn').classList.replace('btn-stop','btn-primary');
   $('capBadge').classList.remove('show');
-  saveToStorage();
-  renderClassList();
+  saveStore();
 }
-function flashHint(msg){
-  const h = $('learnHint'); const prev = h.innerHTML;
-  h.innerHTML = '<b style="color:var(--amber)">'+msg+'</b>';
-  setTimeout(()=>{ h.innerHTML = prev; }, 1800);
-}
+function flashHint(m){const h=$('learnHint');const p=h.innerHTML;h.innerHTML='<b style="color:var(--amber)">'+m+'</b>';setTimeout(()=>h.innerHTML=p,1800);}
 
-/* -------- 登録済み一覧 -------- */
-function renderClassList(){
-  const wrap = $('classList');
-  if(!classifier || classifier.getNumClasses()===0){
-    wrap.innerHTML = '<div class="empty">まだ何も覚えていません</div>';
-    return;
-  }
-  const counts = classifier.getClassExampleCount();
-  wrap.innerHTML = '';
-  Object.keys(counts).forEach(name=>{
-    const row = document.createElement('div');
-    row.className = 'crow';
-    row.innerHTML =
-      '<span class="nm"></span>'+
-      '<span class="ct tnum">'+counts[name]+'枚</span>'+
-      '<button class="del" title="削除">×</button>';
-    row.querySelector('.nm').textContent = name;
-    row.querySelector('.del').onclick = ()=>deleteClass(name);
-    wrap.appendChild(row);
-  });
+/* ---- 整理棚 ---- */
+function renderFolderSelect(){
+  const sel=$('folderSelect');const cur=sel.value;
+  sel.innerHTML='<option value="">（フォルダなし）</option>'+meta.folders.map(f=>`<option value="${f.id}">${escapeHtml(f.name)}</option>`).join('');
+  if(cur)sel.value=cur;
+}
+function newFolder(){
+  const name=(prompt('新しいフォルダ名')||'').trim();if(!name)return;
+  meta.folders.push({id:'f'+Date.now(),name});saveStore();renderLibrary();
+}
+function renameFolder(id){
+  const f=meta.folders.find(x=>x.id===id);if(!f)return;
+  const name=(prompt('フォルダ名を変更',f.name)||'').trim();if(!name)return;
+  f.name=name;saveStore();renderLibrary();
+}
+function deleteFolder(id){
+  if(!confirm('このフォルダを削除しますか？（中の器械は「未分類」に移動します）'))return;
+  meta.folders=meta.folders.filter(x=>x.id!==id);
+  Object.keys(meta.classes).forEach(n=>{if(meta.classes[n].folder===id)meta.classes[n].folder=null;});
+  saveStore();renderLibrary();
+}
+function renameClass(oldName){
+  const newName=(prompt('器械の名前を変更',oldName)||'').trim();
+  if(!newName||newName===oldName)return;
+  if(classifier.getClassExampleCount()[newName]){alert('同じ名前がすでにあります');return;}
+  const ds=classifier.getClassifierDataset();
+  if(ds[oldName]){ds[newName]=ds[oldName];delete ds[oldName];classifier.setClassifierDataset(ds);}
+  meta.classes[newName]=meta.classes[oldName]||{folder:null};delete meta.classes[oldName];
+  saveStore();renderLibrary();
 }
 function deleteClass(name){
-  if(!confirm('「'+name+'」の学習データを消しますか？')) return;
-  classifier.clearClass(name);
-  saveToStorage();
-  renderClassList();
+  if(!confirm('「'+name+'」の学習データを削除しますか？'))return;
+  classifier.clearClass(name);delete meta.classes[name];saveStore();renderLibrary();
 }
+function moveClass(name,folderId){meta.classes[name]={folder:folderId||null};saveStore();renderLibrary();}
 
-/* -------- 判別：連続推論 -------- */
-function startPredictLoop(){
-  stopPredictLoop();
-  const video = $('predictVideo');
-  const loop = async (t)=>{
-    predictRAF = requestAnimationFrame(loop);
-    if(predictBusy) return;
-    if(t - lastPredictTime < 220) return;   // 約4.5回/秒
-    lastPredictTime = t;
-    if(!video.videoWidth) return;
-    predictBusy = true;
-    try{
-      let result;
-      const act = featureModel.infer(video, true);
-      result = await classifier.predictClass(act, 5);
-      act.dispose();
-      renderPrediction(result);
-    }catch(e){ /* フレーム欠落は無視 */ }
-    predictBusy = false;
-  };
-  predictRAF = requestAnimationFrame(loop);
-}
-function stopPredictLoop(){
-  if(predictRAF){ cancelAnimationFrame(predictRAF); predictRAF=null; }
-  predictBusy=false;
-}
+function renderLibrary(){
+  const body=$('libBody');
+  const counts=classifier?classifier.getClassExampleCount():{};
+  const names=Object.keys(counts);
+  // meta.classes に無い名前を補完（直接学習されたもの）
+  names.forEach(n=>{if(!meta.classes[n])meta.classes[n]={folder:null};});
+  if(names.length===0){body.innerHTML='<div class="empty">まだ何も覚えていません。<br>「学習」から器械を覚えさせてください。</div>';return;}
 
-function renderPrediction(res){
-  const conf = res.confidences;
-  const names = Object.keys(conf);
-  // 確信度の高い順
-  names.sort((a,b)=>conf[b]-conf[a]);
-  const top = names[0];
-  const topVal = conf[top];
-  const pct = Math.round(topVal*100);
+  const folderOpts=f=>'<option value="">未分類</option>'+meta.folders.map(x=>`<option value="${x.id}" ${f===x.id?'selected':''}>${escapeHtml(x.name)}</option>`).join('');
+  const rowHtml=n=>`<div class="crow"><span class="nm">${escapeHtml(n)}</span><span class="ct tnum">${counts[n]}枚</span><span class="act">
+      <select onchange="moveClass('${jsq(n)}',this.value)">${folderOpts(meta.classes[n].folder)}</select>
+      <button class="icobtn" title="改名" onclick="renameClass('${jsq(n)}')">✎</button>
+      <button class="icobtn del" title="削除" onclick="deleteClass('${jsq(n)}')">🗑</button></span></div>`;
 
-  // メインの判定文
-  const v = $('verdict');
-  v.classList.remove('idle');
-  if(topVal >= threshold){
-    v.classList.remove('waiting');
-    v.textContent = 'これは「'+top+'」です';
-  }else{
-    v.classList.add('waiting');
-    v.textContent = 'もう一度かざしてください';
-  }
-
-  // トップの確信度バー
-  $('topPct').textContent = pct+'%';
-  const fill = $('topFill');
-  fill.style.width = pct+'%';
-  fill.style.background = (topVal>=threshold) ? 'var(--good)' : 'var(--amber)';
-
-  // 全候補の内訳
-  const bd = $('breakdown');
-  bd.innerHTML = '';
-  names.forEach(nm=>{
-    const p = Math.round(conf[nm]*100);
-    const row = document.createElement('div');
-    row.className='brow';
-    row.innerHTML =
-      '<div class="bk-top"><span class="bk-nm"></span><span class="bk-pct tnum">'+p+'%</span></div>'+
-      '<div class="mini"><i style="width:'+p+'%"></i></div>';
-    row.querySelector('.bk-nm').textContent = nm;
-    bd.appendChild(row);
+  let html='';
+  // 各フォルダ
+  meta.folders.forEach(f=>{
+    const members=names.filter(n=>meta.classes[n].folder===f.id);
+    html+=`<div class="folder"><div class="folder-head"><span class="fname">${escapeHtml(f.name)}</span><span class="fcount">${members.length}件</span>
+      <span class="fact"><button class="icobtn" title="改名" onclick="renameFolder('${f.id}')">✎</button><button class="icobtn del" title="削除" onclick="deleteFolder('${f.id}')">🗑</button></span></div>`;
+    html+= members.length?members.map(rowHtml).join(''):'<div class="crow" style="color:var(--steel-300);font-size:13px">（空）</div>';
+    html+='</div>';
   });
+  // 未分類
+  const unfiled=names.filter(n=>!meta.classes[n].folder);
+  if(unfiled.length){
+    html+=`<div class="folder"><div class="folder-head"><span class="fname">未分類</span><span class="fcount">${unfiled.length}件</span></div>`;
+    html+=unfiled.map(rowHtml).join('')+'</div>';
+  }
+  body.innerHTML=html;
 }
 
-/* -------- 確定ラインの調整 -------- */
-function onThresh(val){
-  threshold = val/100;
-  $('threshVal').textContent = val+'%';
-  $('threshMark').style.left = val+'%';
-  $('threshCap').textContent = 'この線（'+val+'%）を超えると「確定」';
+/* ---- 判別：候補を第3位まで／確定でカメラ停止 ---- */
+function resetPredictUI(){
+  frozen=false;stableName=null;stableCount=0;
+  $('verdict').className='verdict idle';$('verdict').textContent='器械を枠に映してください';
+  $('ranks').innerHTML='';$('predictActions').style.display='none';
+  $('predBadge').classList.remove('show');$('frozenBadge').classList.remove('show');
 }
+function startPredictLoop(){
+  stopPredictLoop();frozen=false;
+  $('predBadge').classList.add('show');$('frozenBadge').classList.remove('show');
+  $('predictActions').style.display='none';
+  const v=$('predictVideo');if(v.paused)v.play().catch(()=>{});
+  const loop=async(t)=>{
+    predictRAF=requestAnimationFrame(loop);
+    if(frozen||predictBusy)return;
+    if(t-lastT<200)return;lastT=t;
+    if(!v.videoWidth)return;
+    predictBusy=true;
+    try{
+      const a=featureModel.infer(v,true);
+      const res=await classifier.predictClass(a,5);a.dispose();
+      handlePrediction(res);
+    }catch(e){}
+    predictBusy=false;
+  };
+  predictRAF=requestAnimationFrame(loop);
+}
+function stopPredictLoop(){if(predictRAF){cancelAnimationFrame(predictRAF);predictRAF=null;}predictBusy=false;}
 
-/* -------- 端末内への保存・復元（閉じても保持） -------- */
-function saveToStorage(){
+function topList(conf){return Object.keys(conf).sort((a,b)=>conf[b]-conf[a]);}
+
+function handlePrediction(res){
+  const conf=res.confidences;const order=topList(conf);
+  const top=order[0],topVal=conf[top];
+  renderRanks(order,conf,false);
+  if(topVal>=threshold){
+    if(top===stableName)stableCount++;else{stableName=top;stableCount=1;}
+    if(stableCount>=3){freezeResult(order,conf);return;}
+    $('verdict').className='verdict';$('verdict').textContent='これは「'+top+'」です';
+  }else{
+    stableName=null;stableCount=0;
+    $('verdict').className='verdict waiting';$('verdict').textContent='もう少しはっきり映してください';
+  }
+}
+function freezeResult(order,conf){
+  frozen=true;stopPredictLoop();
+  const v=$('predictVideo');v.pause();           // 最後のフレームで静止
+  $('predBadge').classList.remove('show');$('frozenBadge').classList.add('show');
+  $('verdict').className='verdict';$('verdict').textContent='これは「'+order[0]+'」です';
+  renderRanks(order,conf,true);
+  $('predictActions').style.display='flex';
+}
+function renderRanks(order,conf,final){
+  const top3=order.slice(0,3);
+  $('ranks').innerHTML=top3.map((n,i)=>{
+    const p=Math.round(conf[n]*100);
+    return `<div class="rank ${i===0?'first':''}"><div class="no">${i+1}</div><div class="body">
+      <div class="top"><span class="rname">${escapeHtml(n)}</span><span class="rpct tnum">${p}%</span></div>
+      <div class="bar"><i style="width:${p}%"></i></div></div></div>`;
+  }).join('');
+}
+function restartPredict(){
+  resetPredictUI();
+  const v=$('predictVideo');
+  if(!stream){startCamera(v,$('predictMsg'),$('predictMsgText')).then(ok=>{if(ok)startPredictLoop();});}
+  else{v.play().catch(()=>{});startPredictLoop();}
+}
+function onThresh(v){threshold=v/100;$('threshVal').textContent=v+'%';}
+
+/* ---- 端末内 保存・復元 ---- */
+function saveStore(){
   try{
-    if(!classifier) return;
-    const dataset = classifier.getClassifierDataset();
-    const obj = {};
-    Object.keys(dataset).forEach(name=>{
-      obj[name] = { data: Array.from(dataset[name].dataSync()), shape: dataset[name].shape };
-    });
-    localStorage.setItem(STORE_KEY, JSON.stringify(obj));
-  }catch(e){ /* プライベートモード等では保存できないことがある */ }
+    const obj={meta,ds:{}};
+    if(classifier){const d=classifier.getClassifierDataset();Object.keys(d).forEach(k=>{obj.ds[k]={data:Array.from(d[k].dataSync()),shape:d[k].shape};});}
+    localStorage.setItem(STORE_KEY,JSON.stringify(obj));
+  }catch(e){console.warn('保存できませんでした',e);}
 }
-function loadFromStorage(){
+function loadStore(){
   try{
-    const raw = localStorage.getItem(STORE_KEY);
-    if(!raw || !classifier) return;
-    const obj = JSON.parse(raw);
-    const dataset = {};
-    Object.keys(obj).forEach(name=>{
-      dataset[name] = tf.tensor(obj[name].data, obj[name].shape);
-    });
-    if(Object.keys(dataset).length) classifier.setClassifierDataset(dataset);
-  }catch(e){ console.warn('保存データの読み込みに失敗', e); }
+    let raw=localStorage.getItem(STORE_KEY);
+    if(!raw){ migrateOld(); raw=localStorage.getItem(STORE_KEY); if(!raw)return; }
+    const obj=JSON.parse(raw);
+    if(obj.meta){meta=obj.meta;if(!meta.folders)meta.folders=[];if(!meta.classes)meta.classes={};}
+    if(obj.ds&&classifier){const ds={};Object.keys(obj.ds).forEach(k=>{ds[k]=tf.tensor(obj.ds[k].data,obj.ds[k].shape);});if(Object.keys(ds).length)classifier.setClassifierDataset(ds);}
+  }catch(e){console.warn('読み込み失敗',e);}
 }
 
-/* -------- iOS：タブ非表示でカメラを止める -------- */
-document.addEventListener('visibilitychange', ()=>{
-  if(document.hidden){ stopCapture(); stopPredictLoop(); }
-});
+/* 旧バージョン(STEP1)の学習データがあれば引き継ぐ */
+function migrateOld(){
+  try{
+    const old=localStorage.getItem('kikai_step1_knn_v1');if(!old)return;
+    const od=JSON.parse(old);const ds={},classes={};
+    Object.keys(od).forEach(name=>{ds[name]={data:od[name].data,shape:od[name].shape};classes[name]={folder:null};});
+    if(Object.keys(ds).length){localStorage.setItem(STORE_KEY,JSON.stringify({meta:{folders:[],classes},ds}));}
+  }catch(e){console.warn('引き継ぎ失敗',e);}
+}
+
+/* ---- 小物 ---- */
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function jsq(s){return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'");}
+document.addEventListener('visibilitychange',()=>{if(document.hidden){stopCapture();stopPredictLoop();}});
 </script>
 </body>
 </html>
